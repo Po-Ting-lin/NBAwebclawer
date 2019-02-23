@@ -25,7 +25,7 @@ class TEXT(object):
         #set web surfer close
         chrome_option = Options()
         chrome_option.add_argument("--headless")
-        chromedriver = r"C:\Users\柏廷\Desktop\python爬蟲\chromedriver.exe"
+        chromedriver = r"/usr/bin/chromedriver"
         #call automatic control
         try:
             driver =  webdriver.Chrome(chromedriver,chrome_options=chrome_option)
@@ -91,7 +91,7 @@ class SCRAPPING(object):
         self.soup = None
     def call_session(self,call_who='localhost'):
         ##read nba player's data, team data, and league data
-        conn = create_engine('mysql+pymysql://root:Password@123@localhost/nba_testdb',poolclass=NullPool)
+        conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
         #set long timeout
         conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
         conn.execute('SET innodb_lock_wait_timeout = 10000;')
