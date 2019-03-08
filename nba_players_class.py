@@ -91,10 +91,13 @@ class SCRAPPING(object):
         self.soup = None
     def call_session(self,call_who='localhost'):
         ##read nba player's data, team data, and league data
-        conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        #conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
+        conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
+        # conn.execute('CREATE DEFINER = root@127.0.0.1 FUNCTION fnc_calcWalkedDistance;')
         #set long timeout
-        conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
-        conn.execute('SET innodb_lock_wait_timeout = 10000;')
+        # conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
+        # conn.execute('SET innodb_lock_wait_timeout = 10000;')
         #session:(connection object that communicating ORM with SQL)
         Session = sessionmaker(bind=conn,autoflush=False)
         self.sess = Session()
