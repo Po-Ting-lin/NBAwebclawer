@@ -6,12 +6,32 @@ purpose: EFF, PER
 """
 import sys
 from sqlalchemy import update,or_
-from nba_players_class import SCRAPPING,TEAM_TABLE,LEAGUE_TABLE,NBASTORAGE,PLAYER_MEAN_TABLE
+from nba_players_class import SCRAPPING,TEAM_TABLE,LEAGUE_TABLE,NBASTORAGE,PLAYER_MEAN_TABLE,BEST_TABLE
 import numpy as np
 
 
 ana = SCRAPPING()
 conn,session = ana.call_session()
+
+###############################################################################
+#best data
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.PTS0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PTS0})
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.AST0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.AST0})
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.BLK0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.BLK0})
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.TOV0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.TOV0})
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.EFF0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.EFF0})
+a = session.query(NBASTORAGE).order_by(NBASTORAGE.PER0.desc()).first()
+session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PER0})
+###############################################################################
+#compare with mean
+
+
+
 ###############################################################################
 ######EFF calculation
 #player query object
