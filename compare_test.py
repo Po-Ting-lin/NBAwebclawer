@@ -5,10 +5,7 @@ from nba_players_class import SCRAPPING,TEAM_TABLE,LEAGUE_TABLE,NBASTORAGE,PLAYE
 
 ana = SCRAPPING()
 conn, session = ana.call_session()
+session = ana.mean_of_each_player_analysis()
 
-
-
-
-
-# session.commit()
+session.commit()
 conn.dispose()

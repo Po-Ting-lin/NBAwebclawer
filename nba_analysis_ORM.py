@@ -160,12 +160,12 @@ for accu_data in accu_list:
     data_mean.update({accu_data:float(np.mean(buffer))})
 
 #update session 
-if not session.query(PLAYER_MEAN_TABLE).first():
-    tem = PLAYER_MEAN_TABLE(data_mean['ontime'],data_mean['PTS'],data_mean['AST'],data_mean['STL'],data_mean['BLK'],data_mean['FGA'],data_mean['FGM'],data_mean['FTA'],data_mean['FTM'],data_mean['TPA'],data_mean['TPM'],data_mean['ORB'],data_mean['DRB'],data_mean['TOV'],data_mean['PF'],data_mean['plusminus'],data_mean['aPER'],15.0,data_mean['EFF'])
+if not session.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == 'mean').first():
+    tem = PLAYER_MEAN_TABLE('mean',data_mean['ontime'],data_mean['PTS'],data_mean['AST'],data_mean['STL'],data_mean['BLK'],data_mean['FGA'],data_mean['FGM'],data_mean['FTA'],data_mean['FTM'],data_mean['TPA'],data_mean['TPM'],data_mean['ORB'],data_mean['DRB'],data_mean['TOV'],data_mean['PF'],data_mean['plusminus'],data_mean['aPER'],15.0,data_mean['EFF'])
     session.add(tem)
 else:
     for col in accu_list:
-        exec("session.query(PLAYER_MEAN_TABLE).update({PLAYER_MEAN_TABLE."+col+": data_mean['"+col+"']})")
+        exec("session.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == 'mean').update({PLAYER_MEAN_TABLE."+col+": data_mean['"+col+"']})")
 
 ###calculate PER
 for player in a:
@@ -196,7 +196,15 @@ for accu_data in ['PER']:
 session.query(PLAYER_MEAN_TABLE).update({PLAYER_MEAN_TABLE.PER: data_mean['PER']})
 
 ###############################################################################
-
     
+session.commit()
+conn.dispose()
+
+###############################################################################
+#after analysis, percentage of each player in league
+ana = SCRAPPING()
+conn, session = ana.call_session()
+print("Calculate the percentage of each player in league")
+session = ana.mean_of_each_player_analysis()
 session.commit()
 conn.dispose()
