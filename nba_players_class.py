@@ -94,10 +94,10 @@ class SCRAPPING(object):
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
 
         #connection in local mySQL
-        conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        #conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
 
         #connection by cloud SQL proxy
-        #conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
+        conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
 
         #set long timeout
         # conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
