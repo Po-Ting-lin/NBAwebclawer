@@ -660,7 +660,7 @@ class TEAM_TABLE(Base_teams):
 class BEST_TABLE(Base_best):
     __tablename__ = 'best_data'
     best = Column('best', String(10), primary_key=True, index=True)
-    bestname = Column('bestname', String(20),index=True)
+    bestname = Column('bestname', String(40),index=True)
     data = Column('data', Float)
     def __init__(self,bestname,best,data):
         self.bestname = bestname

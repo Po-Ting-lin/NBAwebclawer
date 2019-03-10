@@ -15,20 +15,50 @@ conn,session = ana.call_session()
 
 ###############################################################################
 #best data
+print("best~")
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.PTS0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PTS0})
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').first():
+    tem = BEST_TABLE(a.playersname, 'PTS', a.PTS0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PTS0})
+
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.AST0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.AST0})
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').first():
+    tem = BEST_TABLE(a.playersname, 'AST', a.AST0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.AST0})
+    
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.BLK0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.BLK0})
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').first():
+    tem = BEST_TABLE(a.playersname, 'BLK', a.BLK0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.BLK0})
+
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.TOV0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.TOV0})
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').first():
+    tem = BEST_TABLE(a.playersname, 'TOV', a.TOV0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.TOV0})
+
+
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.EFF0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.EFF0})
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').first():
+    tem = BEST_TABLE(a.playersname, 'EFF', a.EFF0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.EFF0})
+
 a = session.query(NBASTORAGE).order_by(NBASTORAGE.PER0.desc()).first()
-session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PER0})
-###############################################################################
-#compare with mean
+if not session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').first():
+    tem = BEST_TABLE(a.playersname, 'PER', a.PER0)
+    session.add(tem)
+else:
+    session.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').update({BEST_TABLE.bestname:a.playersname,BEST_TABLE.data:a.PER0})
+
 
 
 
@@ -89,14 +119,14 @@ for player in a:
     if not t_obj:
         sys.exit(player.playersname+'cannot find his team!')
     for i in range(10): #each game
-        
+
         #unadjusted PER
         exec("time_tem = player.ontime"+str(i))
         if player.ontime0 >= 5:
             r_min = (1/player.ontime0)
         else:
             r_min = 0
-        
+
         exec("block1 = player.TPM"+str(i))
         exec("block2 = (2/3)*player.AST"+str(i))
         #(tmAST/tmFGM) is that the preference of scoring from otehrs AST or personal offense
@@ -159,7 +189,7 @@ for accu_data in accu_list:
             buffer.append(data_accumulated[accu_data][i])
     data_mean.update({accu_data:float(np.mean(buffer))})
 
-#update session 
+#update session
 if not session.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == 'mean').first():
     tem = PLAYER_MEAN_TABLE('mean',data_mean['ontime'],data_mean['PTS'],data_mean['AST'],data_mean['STL'],data_mean['BLK'],data_mean['FGA'],data_mean['FGM'],data_mean['FTA'],data_mean['FTM'],data_mean['TPA'],data_mean['TPM'],data_mean['ORB'],data_mean['DRB'],data_mean['TOV'],data_mean['PF'],data_mean['plusminus'],data_mean['aPER'],15.0,data_mean['EFF'])
     session.add(tem)
@@ -196,7 +226,7 @@ for accu_data in ['PER']:
 session.query(PLAYER_MEAN_TABLE).update({PLAYER_MEAN_TABLE.PER: data_mean['PER']})
 
 ###############################################################################
-    
+
 session.commit()
 conn.dispose()
 

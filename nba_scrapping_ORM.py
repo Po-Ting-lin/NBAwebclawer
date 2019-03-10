@@ -45,7 +45,7 @@ def update_attr(ep,attrname,new_value):
 ###############################################################################
 #if someone import this,this code will not be conducted.
 if __name__ == '__main__':
-    decision1 = 'n'
+    decision1 = 'y'
     decision2 = 'y'
     # decision1 = input("Scrapping nba players?")
     # decision2 = input("Scrapping tmdata and lgdata?")
