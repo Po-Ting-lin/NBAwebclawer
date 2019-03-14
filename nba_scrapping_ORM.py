@@ -46,7 +46,7 @@ def update_attr(ep,attrname,new_value):
 #if someone import this,this code will not be conducted.
 if __name__ == '__main__':
     decision1 = 'y'
-    decision2 = 'y'
+    decision2 = 'n'
     # decision1 = input("Scrapping nba players?")
     # decision2 = input("Scrapping tmdata and lgdata?")
 elif __name__ != '__main__':
@@ -62,13 +62,13 @@ if decision1 == 'y':
     #main scrapping
     #nba taiwan website
     url = 'https://tw.global.nba.com/scores/'
-    #get main text
+    #get main textRajon-Rondo
     main_text = TEXT(url).get_page_text()
     #get soup
     soup = scrape.call_soup(main_text)
     #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    #clean date0 
-    session_scrape = scrape.clean_date0()
+    # #clean date0
+    # session_scrape = scrape.clean_date0()
     #check the date
     session_scrape = scrape.check_date()
     #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
