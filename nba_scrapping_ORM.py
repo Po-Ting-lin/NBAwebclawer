@@ -11,6 +11,8 @@ package: SQLalchemy(MYSQL dialect), BeautifulSoup, Selenium
 # from sqlalchemy import update
 from nba_players_class import TEXT,LEAGUE,TEAM,SCRAPPING,NBASTORAGE,TEAM_TABLE,LEAGUE_TABLE, find_number
 
+
+
 # def update_attr(ep, attrname, new_value):
 #     """query_obj, str, str"""
 #
@@ -41,7 +43,7 @@ elif __name__ != '__main__':
 # create scrapping object
 scrape = SCRAPPING()
 # connection and session
-conn,session_scrape = scrape.call_session()
+conn, session_scrape = scrape.call_session()
 
 if decision1 == 'y':
     session_scrape = scrape.scrape_player()

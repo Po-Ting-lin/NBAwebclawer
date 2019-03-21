@@ -11,7 +11,7 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.declarative import declarative_base
@@ -29,18 +29,15 @@ def find_number(i, target_text, number_list, ontime_bool=False):
     if num:
         into = num.rpartition(target_text_1)[2].rpartition(target_text_2)[0]
         if ontime_bool:
-            into = int(into.split(':')[0]) + round(int(into.split(':')[1])/60,2)
+            into = int(into.split(':')[0]) + round(int(into.split(':')[1])/60, 2)
         number_list.append(into)
     else:
         number_list.append('0')
     if not ontime_bool:
         number_list = list(map(float, number_list))
     return number_list
-
-
-
-
-
+        
+        
 class TEXT(object):
     def __init__(self,url):
         self.url = url
@@ -113,19 +110,18 @@ class TEAM(object):  # require class TEXT
                 continue
         return team_data, opp_data
 
-
-class SCRAPPING(object):
+# father
+class Base_of(object):
     def __init__(self):
-        self.date = '0/0'
         self.sess = None
-        self.soup = None
-
+        self.conn = None
+        
     def call_session(self,call_who='localhost'):
         # read nba player's data, team data, and league data
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
 
         # connection in local mySQL
-        conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        self.conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
 
         # connection by cloud SQL proxy
         # conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
@@ -135,9 +131,33 @@ class SCRAPPING(object):
         # conn.execute('SET innodb_lock_wait_timeout = 10000;')
 
         # session:(connection object that communicating ORM with SQL)
-        Session = sessionmaker(bind=conn,autoflush=False)
+        Session = sessionmaker(bind=self.conn, autoflush=False)
         self.sess = Session()
-        return conn,self.sess
+        return self.conn,self.sess
+    
+    def update(self, name, property, new_value):
+        for i in range(8,-1,-1):
+            exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == "+ name +").update({NBASTORAGE."+property+str(i+1)+": NBASTORAGE."+property+str(i)+"})")
+        exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == "+ name +").update({NBASTORAGE."+property+"0: float("+new_value+")})")
+
+        return
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime9: NBASTORAGE.ontime8})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime8: NBASTORAGE.ontime7})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime7: NBASTORAGE.ontime6})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime6: NBASTORAGE.ontime5})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime5: NBASTORAGE.ontime4})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime4: NBASTORAGE.ontime3})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime3: NBASTORAGE.ontime2})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime2: NBASTORAGE.ontime1})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime1: NBASTORAGE.ontime0})
+        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime0: float(ontime)})
+
+# a child of Base_of
+class SCRAPPING(Base_of):
+    def __init__(self):
+        self.date = '0/0'
+        self.soup = None
+        super().__init__()
 
     def call_soup(self,main_text):
         """main_text is for the main page"""
@@ -204,6 +224,8 @@ class SCRAPPING(object):
         return url_list
 
     def mean_of_each_player_analysis(self):
+        """calculate the average of each data by considering the proportion of ontime of each player"""
+
         # scrape = SCRAPPING()
         # conn, session = scrape.call_session()
         player_list = self.sess.query(NBASTORAGE).all()
@@ -570,6 +592,8 @@ class SCRAPPING(object):
         return self.sess
 
     def scrape_player(self):
+        """scarpe raw data of each players"""
+
         # main scrapping
         # nba taiwan website
         url = 'https://tw.global.nba.com/scores/'
@@ -842,20 +866,11 @@ class SCRAPPING(object):
                                 i + 1) + ": NBASTORAGE.plusminus" + str(i) + "})")
                         self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
                             {NBASTORAGE.plusminus0: float(pm)})
-
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime9: NBASTORAGE.ontime8})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime8: NBASTORAGE.ontime7})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime7: NBASTORAGE.ontime6})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime6: NBASTORAGE.ontime5})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime5: NBASTORAGE.ontime4})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime4: NBASTORAGE.ontime3})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime3: NBASTORAGE.ontime2})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime2: NBASTORAGE.ontime1})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime1: NBASTORAGE.ontime0})
-                    # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime0: float(ontime)})
         return self.sess
 
     def scrape_league(self):
+        """scrape the data about the average in league"""
+
         # find data in league and team
         print('league_data...')
         league_data = LEAGUE().find_league_statistics()
@@ -884,6 +899,8 @@ class SCRAPPING(object):
         return self.sess
 
     def scrape_team(self):
+        """scrape the data about the average of each team"""
+
         print('team_data...')
         # dump into session
         c = self.sess.query(TEAM_TABLE)
@@ -932,6 +949,202 @@ class SCRAPPING(object):
                 for col, i in zip(mark, range(8)):
                     exec("self.sess.query(TEAM_TABLE).filter(TEAM_TABLE.teamsname == 'opp' + team).update({TEAM_TABLE." + col + ": opp_data[" + str(i) + "]})")
             print('\n')
+        return self.sess
+
+
+class ANALYSIS(Base_of):
+    
+    def __init__(self):
+        super().__init__()
+        self.total_MP_eachgame = [0]*10
+        self.accumulated_aPER0 = 0
+    def ana_best(self):
+        """Find the best data among all the players"""
+
+        # best data
+        print("best~")
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.PTS0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').first():
+            tem = BEST_TABLE(a.playersname, 'PTS', a.PTS0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.PTS0})
+
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.AST0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').first():
+            tem = BEST_TABLE(a.playersname, 'AST', a.AST0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.AST0})
+
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.BLK0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').first():
+            tem = BEST_TABLE(a.playersname, 'BLK', a.BLK0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.BLK0})
+
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.TOV0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').first():
+            tem = BEST_TABLE(a.playersname, 'TOV', a.TOV0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.TOV0})
+
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.EFF0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').first():
+            tem = BEST_TABLE(a.playersname, 'EFF', a.EFF0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.EFF0})
+
+        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.PER0.desc()).first()
+        if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').first():
+            tem = BEST_TABLE(a.playersname, 'PER', a.PER0)
+            self.sess.add(tem)
+        else:
+            self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').update(
+                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.PER0})
+        return self.sess
+
+    def eff_calculation(self):
+        """After scraping, this method can calculate EFF0 for each player."""
+
+        a = self.sess.query(NBASTORAGE).all()
+        for player in a:
+            # these data are float type~
+            eff = player.PTS0 + +player.ORB0 + +player.DRB0 + +player.AST0 + player.STL0 + player.BLK0 - (player.FGA0 - player.FGM0) - (player.FTA0 - player.FTM0) - player.TOV0
+            self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.EFF0: eff})
+            print(player.playersname, 'finish EFF calculation:', player.EFF0)
+        return self.sess
+    
+    def league_parameter_calculation(self):
+        """After scraping, this method can calculate some parameters in league, including  factor, VOP and DRBP."""
+        ##league constant factor
+        # query object
+        bb = self.sess.query(LEAGUE_TABLE)
+        # LEAGUE_TABLE object
+        b = bb.first()
+        # to show the feasibility of offense among past and future
+        factor = (2 / 3) - (0.5 * (b.ast_per_g / b.fgm_per_g)) / (2 * (b.fgm_per_g / b.ftm_per_g))
+        # value of possession, to show the eff of offense among all player(league)
+        VOP = b.pts_per_g / (b.fga_per_g - b.orb_per_g + b.tov_per_g + 0.44 * b.fta_per_g)
+        # defensive rebound percentage, to show the ability of defense among all player
+        DRBP = ((b.drb_per_g + b.orb_per_g) - b.orb_per_g) / (b.drb_per_g + b.orb_per_g)
+        # update to session
+        self.sess.query(LEAGUE_TABLE).update({LEAGUE_TABLE.factor: factor, LEAGUE_TABLE.VOP: VOP, LEAGUE_TABLE.DRBP: DRBP})
+        
+        return self.sess
+    
+    def team_parameter_calculation(self):
+        ##team constant factor
+        totalteam_list = ['ATL', 'BRK', 'BOS', 'CHO', 'CHI', 'CLE', 'DAL', 'DEN', 'DET', 'GSW', 'HOU', 'IND', 'LAC',
+                          'LAL', 'MEM', 'MIA', 'MIL', 'MIN', 'NOP', 'NYK', 'OKC', 'ORL', 'PHI', 'PHO', 'POR', 'SAC',
+                          'SAS', 'TOR', 'UTA', 'WAS']
+        
+        cc = self.sess.query(TEAM_TABLE)
+        for t in totalteam_list:
+            # query. eg: ATL and oppATL
+            cc_query = cc.filter(or_(TEAM_TABLE.teamsname == t, TEAM_TABLE.teamsname == 'opp' + t))
+            # select one
+            t_obj = cc_query.all()[0]
+            o_obj = cc_query.all()[1]
+            # Possessions(Poss)
+            tmPoss = t_obj.fga_per_g + 0.4 * t_obj.fta_per_g - 1.07 * (
+                        t_obj.orb_per_g / (t_obj.orb_per_g + o_obj.drb_per_g)) * (
+                                 t_obj.fga_per_g - t_obj.fgm_per_g) + t_obj.tov_per_g
+            oppPoss = o_obj.fga_per_g + 0.4 * o_obj.fta_per_g - 1.07 * (
+                        o_obj.orb_per_g / (o_obj.orb_per_g + t_obj.drb_per_g)) * (
+                                  o_obj.fga_per_g - o_obj.fgm_per_g) + o_obj.tov_per_g
+            # pace factor
+            tmPace = 48 * ((tmPoss + oppPoss) / (2 * (t_obj.mp_per_g / 5)))
+            # update to session
+            cc_query.filter(TEAM_TABLE.teamsname == t).update(
+                {TEAM_TABLE.tmPOSS: tmPoss, TEAM_TABLE.oppPOSS: oppPoss, TEAM_TABLE.tmPACE: tmPace})
+            print(t, ' tmPACE is ', cc_query.filter(TEAM_TABLE.teamsname == t).first().tmPACE)
+        
+        return self.sess
+    
+    def a_per_calculation(self):
+        """After scraping, this method can calculate adjested PER in the latest game for each player."""
+        
+        # import league data
+        lg = self.sess.query(LEAGUE_TABLE).first()
+        for player in self.sess.query(NBASTORAGE).all():
+            # team object eg: t_obj.ast_per_g
+            # player object eg: player.AST
+            t_obj = self.sess.query(TEAM_TABLE).filter(TEAM_TABLE.teamsname == player.team).first()
+            if not t_obj:
+                sys.exit(player.playersname + 'cannot find his team!')
+
+            # unadjusted PER
+            if player.ontime0 >= 5:
+                r_min = (1 / player.ontime0)
+            else:
+                r_min = 0
+
+            block1 = player.TPM0
+            block2 = (2/3)*player.AST0
+            # (tmAST/tmFGM) is that the preference of scoring from others AST or personal offense
+            preference_of_scoring = (t_obj.ast_per_g / t_obj.fgm_per_g)
+            block3 = (2 - lg.factor*preference_of_scoring)*player.FGM0
+            # free throw considering (tmAST/tmFG)
+            block4 = (player.FTM0*0.5*(2-(1/3)*preference_of_scoring))
+            # turnovers
+            block5 = lg.VOP*player.TOV0
+            # missing field goal
+            block6 = lg.VOP*lg.DRBP*(player.FGA0 - player.FGM0)
+            # missing free throw
+            block7 = lg.VOP*0.44*(0.44+(0.56*lg.DRBP))*(player.FTA0 - player.FTM0)
+            # defense rebounds
+            total_RB = player.ORB0 + player.DRB0
+            block8 = lg.VOP*(1-lg.DRBP)*(total_RB - player.ORB0)
+            # offense rebounds
+            block9 = lg.VOP*lg.DRBP*player.ORB0
+            # steal
+            block10 = lg.VOP*player.STL0
+            # block considering defense rebounds
+            block11 = lg.VOP*lg.DRBP*player.BLK0
+            # fouls considering the effect after foul
+            block12 = player.PF0*((lg.ftm_per_g/lg.pf_per_g)-0.44*(lg.fta_per_g/lg.pf_per_g)*lg.VOP)
+            uPER = r_min * (block1 + block2 + block3 + block4 - block5 - block6 - block7 + block8 + block9 + block10 + block11 - block12)
+            # aPER
+            aPER = round(uPER * (lg.pace / t_obj.tmPACE), 2)
+            self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.aPER0: aPER})
+            print('calculate', player.playersname, "'s aPER0: ", aPER)
+
+        return self.sess
+
+    def total_MP_map(self):
+        for i in range(10):
+            for player in self.sess.query(NBASTORAGE).all():
+                exec("self.total_MP_eachgame["+str(i)+"] += player.ontime"+str(i))
+        print('total_MP_eachgame0:', self.total_MP_eachgame[0], 'total_MP_eachgame1:', self.total_MP_eachgame[1])
+
+    def per_calculation(self):
+        ## calculate lg_aPER(sigma(MPi*aPERi/Min))
+        # accumulate aPER
+        buffer = []
+        a = self.sess.query(NBASTORAGE).all()
+        for player in a:
+            buffer.append(player.aPER0)
+        self.accumulated_aPER0 = np.mean(buffer)
+
+        ## calculate PER
+        for player in a:
+            if self.accumulated_aPER0 != 0:
+                PER = round(player.aPER0*(15/self.accumulated_aPER0),2)
+            elif self.accumulated_aPER0 == 0:
+                PER = 0
+            for i in range(8,-1,-1):
+                exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.PER"+str(i+1)+": NBASTORAGE.PER"+str(i)+"})")
+            exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.PER0: float(PER)})")
+            print(player.playersname,"'s PER0 is: ",PER)
         return self.sess
 
 
@@ -1022,6 +1235,7 @@ class PLAYER_MEAN_TABLE(Base_mean):
         repr_str = repr_str1+repr_str1_5+repr_str2+repr_str3+repr_str4+repr_str5+repr_str6+repr_str7+repr_str8+repr_str9+repr_str10+repr_str11+repr_str12+repr_str13+repr_str14+repr_str15+repr_str16+repr_str17+repr_str18+repr_str19+repr_str20+repr_str21
         return repr_str.format(self.name,self.ontime,self.PTS,self.AST,self.STL,self.BLK,self.FGA,self.FGM,self.FTA,self.FTM,self.TPA,self.TPM,self.ORB,self.DRB,self.TOV,self.PF,self.plusminus,self.aPER,self.PER,self.EFF)
 
+
 class TEAM_TABLE(Base_teams):
     __tablename__ = 'team_data'
     mark = ['mp_per_g','ast_per_g','fgm_per_g','fga_per_g','fta_per_g','orb_per_g','drb_per_g','tov_per_g','tmPOSS','oppPOSS','tmPACE']
@@ -1058,10 +1272,12 @@ class BEST_TABLE(Base_best):
     best = Column('best', String(10), primary_key=True, index=True)
     bestname = Column('bestname', String(40),index=True)
     data = Column('data', Float)
+    
     def __init__(self,bestname,best,data):
         self.bestname = bestname
         self.best = best
         self.data = data
+        
     def __repr__(self):
         return "best_table\nname:{}\nbest:{}\ndata:{}\n".format(self.bestname, self.best,self.data)
 
