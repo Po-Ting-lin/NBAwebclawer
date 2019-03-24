@@ -18,6 +18,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column,String,Float,Integer
 
 
+
+
 ###############################################################################
 
 def find_number(i, target_text, number_list, ontime_bool=False):
@@ -134,29 +136,17 @@ class Base_of(object):
         Session = sessionmaker(bind=self.conn, autoflush=False)
         self.sess = Session()
         return self.conn,self.sess
-    
-    def update(self, name, property, new_value):
-        for i in range(8,-1,-1):
-            exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == "+ name +").update({NBASTORAGE."+property+str(i+1)+": NBASTORAGE."+property+str(i)+"})")
-        exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == "+ name +").update({NBASTORAGE."+property+"0: float("+new_value+")})")
-
-        return
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime9: NBASTORAGE.ontime8})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime8: NBASTORAGE.ontime7})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime7: NBASTORAGE.ontime6})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime6: NBASTORAGE.ontime5})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime5: NBASTORAGE.ontime4})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime4: NBASTORAGE.ontime3})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime3: NBASTORAGE.ontime2})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime2: NBASTORAGE.ontime1})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime1: NBASTORAGE.ontime0})
-        # session_scrape.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime0: float(ontime)})
 
 # a child of Base_of
 class SCRAPPING(Base_of):
     def __init__(self):
         self.date = '0/0'
+        self.year = 0
+        self.month = 0
+        self.day = 0
         self.soup = None
+        self.id_current = -1
+        self.debug = [0]
         super().__init__()
 
     def call_soup(self,main_text):
@@ -166,6 +156,9 @@ class SCRAPPING(Base_of):
 
     def check_date(self):
         date = self.soup.find('span', 'day ng-binding').string
+        self.year = 2019
+        self.month = int(date.split('月')[0].strip(' '))
+        self.day = int(date.split('月')[1].split('日')[0].strip(' '))
         date_scrapped = date.split('月')[0].strip(' ') + '/' + date.split('月')[1].split('日')[0].strip(' ')
         status = True
         try:
@@ -223,374 +216,6 @@ class SCRAPPING(Base_of):
                 print('none')
         return url_list
 
-    def mean_of_each_player_analysis(self):
-        """calculate the average of each data by considering the proportion of ontime of each player"""
-
-        # scrape = SCRAPPING()
-        # conn, session = scrape.call_session()
-        player_list = self.sess.query(NBASTORAGE).all()
-        playermean = self.sess.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == 'mean').first()
-
-        plot_mom_list = []
-        for player in player_list:
-            this_player_totaltime = 0
-            this_player_totaltime += player.ontime0
-            this_player_totaltime += player.ontime1
-            this_player_totaltime += player.ontime2
-            this_player_totaltime += player.ontime3
-            this_player_totaltime += player.ontime4
-            this_player_totaltime += player.ontime5
-            this_player_totaltime += player.ontime6
-            this_player_totaltime += player.ontime7
-            this_player_totaltime += player.ontime8
-            this_player_totaltime += player.ontime9
-
-            # print('ometime:',player.ontime0,player.ontime1,player.ontime2)
-            # print('this_player_totaltime:', this_player_totaltime)
-
-            # ontime of each player in each game ratio
-            partition = [0] * 10
-            aaaa = ['ontime', 'PTS', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'ORB', 'DRB', 'TOV',
-                    'PF', 'plusminus', 'aPER', 'PER', 'EFF']
-            if this_player_totaltime == 0:
-                partition = [0] * 10
-            else:
-                partition[0] = (player.ontime0 / this_player_totaltime)
-                partition[1] = (player.ontime1 / this_player_totaltime)
-                partition[2] = (player.ontime2 / this_player_totaltime)
-                partition[3] = (player.ontime3 / this_player_totaltime)
-                partition[4] = (player.ontime4 / this_player_totaltime)
-                partition[5] = (player.ontime5 / this_player_totaltime)
-                partition[6] = (player.ontime6 / this_player_totaltime)
-                partition[7] = (player.ontime7 / this_player_totaltime)
-                partition[8] = (player.ontime8 / this_player_totaltime)
-                partition[9] = (player.ontime9 / this_player_totaltime)
-            mean_data = dict()
-
-            # ontime
-            buffer = 0.0
-            buffer += partition[0] * player.ontime0
-            buffer += partition[1] * player.ontime1
-            buffer += partition[2] * player.ontime2
-            buffer += partition[3] * player.ontime3
-            buffer += partition[4] * player.ontime4
-            buffer += partition[5] * player.ontime5
-            buffer += partition[6] * player.ontime6
-            buffer += partition[7] * player.ontime7
-            buffer += partition[8] * player.ontime8
-            buffer += partition[9] * player.ontime9
-            mean_data.update({'ontime': buffer})
-            # PTS
-            buffer = 0.0
-            buffer += partition[0] * player.PTS0
-            buffer += partition[1] * player.PTS1
-            buffer += partition[2] * player.PTS2
-            buffer += partition[3] * player.PTS3
-            buffer += partition[4] * player.PTS4
-            buffer += partition[5] * player.PTS5
-            buffer += partition[6] * player.PTS6
-            buffer += partition[7] * player.PTS7
-            buffer += partition[8] * player.PTS8
-            buffer += partition[9] * player.PTS9
-            mean_data.update({'PTS': buffer})
-            # AST
-            buffer = 0.0
-            buffer += partition[0] * player.AST0
-            buffer += partition[1] * player.AST1
-            buffer += partition[2] * player.AST2
-            buffer += partition[3] * player.AST3
-            buffer += partition[4] * player.AST4
-            buffer += partition[5] * player.AST5
-            buffer += partition[6] * player.AST6
-            buffer += partition[7] * player.AST7
-            buffer += partition[8] * player.AST8
-            buffer += partition[9] * player.AST9
-            mean_data.update({'AST': buffer})
-            # STL
-            buffer = 0.0
-            buffer += partition[0] * player.STL0
-            buffer += partition[1] * player.STL1
-            buffer += partition[2] * player.STL2
-            buffer += partition[3] * player.STL3
-            buffer += partition[4] * player.STL4
-            buffer += partition[5] * player.STL5
-            buffer += partition[6] * player.STL6
-            buffer += partition[7] * player.STL7
-            buffer += partition[8] * player.STL8
-            buffer += partition[9] * player.STL9
-            mean_data.update({'STL': buffer})
-            # BLK
-            buffer = 0.0
-            buffer += partition[0] * player.BLK0
-            buffer += partition[1] * player.BLK1
-            buffer += partition[2] * player.BLK2
-            buffer += partition[3] * player.BLK3
-            buffer += partition[4] * player.BLK4
-            buffer += partition[5] * player.BLK5
-            buffer += partition[6] * player.BLK6
-            buffer += partition[7] * player.BLK7
-            buffer += partition[8] * player.BLK8
-            buffer += partition[9] * player.BLK9
-            mean_data.update({'BLK': buffer})
-            # FGA
-            buffer = 0.0
-            buffer += partition[0] * player.FGA0
-            buffer += partition[1] * player.FGA1
-            buffer += partition[2] * player.FGA2
-            buffer += partition[3] * player.FGA3
-            buffer += partition[4] * player.FGA4
-            buffer += partition[5] * player.FGA5
-            buffer += partition[6] * player.FGA6
-            buffer += partition[7] * player.FGA7
-            buffer += partition[8] * player.FGA8
-            buffer += partition[9] * player.FGA9
-            mean_data.update({'FGA': buffer})
-            # FGM
-            buffer = 0.0
-            buffer += partition[0] * player.FGM0
-            buffer += partition[1] * player.FGM1
-            buffer += partition[2] * player.FGM2
-            buffer += partition[3] * player.FGM3
-            buffer += partition[4] * player.FGM4
-            buffer += partition[5] * player.FGM5
-            buffer += partition[6] * player.FGM6
-            buffer += partition[7] * player.FGM7
-            buffer += partition[8] * player.FGM8
-            buffer += partition[9] * player.FGM9
-            mean_data.update({'FGM': buffer})
-            # FTA
-            buffer = 0.0
-            buffer += partition[0] * player.FTA0
-            buffer += partition[1] * player.FTA1
-            buffer += partition[2] * player.FTA2
-            buffer += partition[3] * player.FTA3
-            buffer += partition[4] * player.FTA4
-            buffer += partition[5] * player.FTA5
-            buffer += partition[6] * player.FTA6
-            buffer += partition[7] * player.FTA7
-            buffer += partition[8] * player.FTA8
-            buffer += partition[9] * player.FTA9
-            mean_data.update({'FTA': buffer})
-            # FTM
-            buffer = 0.0
-            buffer += partition[0] * player.FTM0
-            buffer += partition[1] * player.FTM1
-            buffer += partition[2] * player.FTM2
-            buffer += partition[3] * player.FTM3
-            buffer += partition[4] * player.FTM4
-            buffer += partition[5] * player.FTM5
-            buffer += partition[6] * player.FTM6
-            buffer += partition[7] * player.FTM7
-            buffer += partition[8] * player.FTM8
-            buffer += partition[9] * player.FTM9
-            mean_data.update({'FTM': buffer})
-            # TPA
-            buffer = 0.0
-            buffer += partition[0] * player.TPA0
-            buffer += partition[1] * player.TPA1
-            buffer += partition[2] * player.TPA2
-            buffer += partition[3] * player.TPA3
-            buffer += partition[4] * player.TPA4
-            buffer += partition[5] * player.TPA5
-            buffer += partition[6] * player.TPA6
-            buffer += partition[7] * player.TPA7
-            buffer += partition[8] * player.TPA8
-            buffer += partition[9] * player.TPA9
-            mean_data.update({'TPA': buffer})
-            # TPM
-            buffer = 0.0
-            buffer += partition[0] * player.TPM0
-            buffer += partition[1] * player.TPM1
-            buffer += partition[2] * player.TPM2
-            buffer += partition[3] * player.TPM3
-            buffer += partition[4] * player.TPM4
-            buffer += partition[5] * player.TPM5
-            buffer += partition[6] * player.TPM6
-            buffer += partition[7] * player.TPM7
-            buffer += partition[8] * player.TPM8
-            buffer += partition[9] * player.TPM9
-            mean_data.update({'TPM': buffer})
-            # ORB
-            buffer = 0.0
-            buffer += partition[0] * player.ORB0
-            buffer += partition[1] * player.ORB1
-            buffer += partition[2] * player.ORB2
-            buffer += partition[3] * player.ORB3
-            buffer += partition[4] * player.ORB4
-            buffer += partition[5] * player.ORB5
-            buffer += partition[6] * player.ORB6
-            buffer += partition[7] * player.ORB7
-            buffer += partition[8] * player.ORB8
-            buffer += partition[9] * player.ORB9
-            mean_data.update({'ORB': buffer})
-            # DRB
-            buffer = 0.0
-            buffer += partition[0] * player.DRB0
-            buffer += partition[1] * player.DRB1
-            buffer += partition[2] * player.DRB2
-            buffer += partition[3] * player.DRB3
-            buffer += partition[4] * player.DRB4
-            buffer += partition[5] * player.DRB5
-            buffer += partition[6] * player.DRB6
-            buffer += partition[7] * player.DRB7
-            buffer += partition[8] * player.DRB8
-            buffer += partition[9] * player.DRB9
-            mean_data.update({'DRB': buffer})
-            # TOV
-            buffer = 0.0
-            buffer += partition[0] * player.TOV0
-            buffer += partition[1] * player.TOV1
-            buffer += partition[2] * player.TOV2
-            buffer += partition[3] * player.TOV3
-            buffer += partition[4] * player.TOV4
-            buffer += partition[5] * player.TOV5
-            buffer += partition[6] * player.TOV6
-            buffer += partition[7] * player.TOV7
-            buffer += partition[8] * player.TOV8
-            buffer += partition[9] * player.TOV9
-            mean_data.update({'TOV': buffer})
-            # PF
-            buffer = 0.0
-            buffer += partition[0] * player.PF0
-            buffer += partition[1] * player.PF1
-            buffer += partition[2] * player.PF2
-            buffer += partition[3] * player.PF3
-            buffer += partition[4] * player.PF4
-            buffer += partition[5] * player.PF5
-            buffer += partition[6] * player.PF6
-            buffer += partition[7] * player.PF7
-            buffer += partition[8] * player.PF8
-            buffer += partition[9] * player.PF9
-            mean_data.update({'PF': buffer})
-            # plusminus
-            buffer = 0.0
-            buffer += partition[0] * player.plusminus0
-            buffer += partition[1] * player.plusminus1
-            buffer += partition[2] * player.plusminus2
-            buffer += partition[3] * player.plusminus3
-            buffer += partition[4] * player.plusminus4
-            buffer += partition[5] * player.plusminus5
-            buffer += partition[6] * player.plusminus6
-            buffer += partition[7] * player.plusminus7
-            buffer += partition[8] * player.plusminus8
-            buffer += partition[9] * player.plusminus9
-            mean_data.update({'plusminus': buffer})
-            # aPER
-            buffer = 0.0
-            buffer += partition[0] * player.aPER0
-            buffer += partition[1] * player.aPER1
-            buffer += partition[2] * player.aPER2
-            buffer += partition[3] * player.aPER3
-            buffer += partition[4] * player.aPER4
-            buffer += partition[5] * player.aPER5
-            buffer += partition[6] * player.aPER6
-            buffer += partition[7] * player.aPER7
-            buffer += partition[8] * player.aPER8
-            buffer += partition[9] * player.aPER9
-            mean_data.update({'aPER': buffer})
-            # PER
-            buffer = 0.0
-            buffer += partition[0] * player.PER0
-            buffer += partition[1] * player.PER1
-            buffer += partition[2] * player.PER2
-            buffer += partition[3] * player.PER3
-            buffer += partition[4] * player.PER4
-            buffer += partition[5] * player.PER5
-            buffer += partition[6] * player.PER6
-            buffer += partition[7] * player.PER7
-            buffer += partition[8] * player.PER8
-            buffer += partition[9] * player.PER9
-            mean_data.update({'PER': buffer})
-            # EFF
-            buffer = 0.0
-            buffer += partition[0] * player.EFF0
-            buffer += partition[1] * player.EFF1
-            buffer += partition[2] * player.EFF2
-            buffer += partition[3] * player.EFF3
-            buffer += partition[4] * player.EFF4
-            buffer += partition[5] * player.EFF5
-            buffer += partition[6] * player.EFF6
-            buffer += partition[7] * player.EFF7
-            buffer += partition[8] * player.EFF8
-            buffer += partition[9] * player.EFF9
-            mean_data.update({'EFF': buffer})
-
-            # update PLAYER_MEAN_TABLE
-            eachplayermean = self.sess.query(PLAYER_MEAN_TABLE)
-            dumplist = []
-            aaa = ['PTS', 'FG%', 'FT%', 'TP%', 'AST', 'STL', 'BLK', 'ORB', 'DRB', 'TOV', 'PER']
-            try:
-                dumplist.append(round((mean_data['PTS'] / playermean.PTS) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(
-                    round(((mean_data['FGM'] / mean_data['FGA']) / (playermean.FGM / playermean.FGA)) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(
-                    round(((mean_data['FTM'] / mean_data['FTA']) / (playermean.FTM / playermean.FTA)) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(
-                    round(((mean_data['TPM'] / mean_data['TPA']) / (playermean.TPM / playermean.TPA)) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['AST'] / playermean.AST) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['STL'] / playermean.STL) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['BLK'] / playermean.BLK) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['ORB'] / playermean.ORB) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['DRB'] / playermean.DRB) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['TOV'] / playermean.TOV) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            try:
-                dumplist.append(round((mean_data['PER'] / playermean.PER) * 100, 2))
-            except ZeroDivisionError:
-                dumplist.append(0.0)
-            # update session
-            # FG% --> FGM
-            # FT% --> FTM
-            # TP% --> TPM
-
-            #no such player
-            if not self.sess.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == player.playersname).first():
-                tem = PLAYER_MEAN_TABLE(player.playersname, 0, dumplist[0], dumplist[4], dumplist[5], dumplist[6], 0, dumplist[1], 0, dumplist[2], 0, dumplist[3], dumplist[7], dumplist[8], dumplist[9], 0, 0, 0, dumplist[10], 0)
-                self.sess.add(tem)
-            else:
-                pl = self.sess.query(PLAYER_MEAN_TABLE).filter(PLAYER_MEAN_TABLE.name == player.playersname)
-                pl.update({PLAYER_MEAN_TABLE.PTS: dumplist[0]})
-                pl.update({PLAYER_MEAN_TABLE.FGM: dumplist[1]})
-                pl.update({PLAYER_MEAN_TABLE.FTM: dumplist[2]})
-                pl.update({PLAYER_MEAN_TABLE.TPM: dumplist[3]})
-                pl.update({PLAYER_MEAN_TABLE.AST: dumplist[4]})
-                pl.update({PLAYER_MEAN_TABLE.STL: dumplist[5]})
-                pl.update({PLAYER_MEAN_TABLE.BLK: dumplist[6]})
-                pl.update({PLAYER_MEAN_TABLE.ORB: dumplist[7]})
-                pl.update({PLAYER_MEAN_TABLE.DRB: dumplist[8]})
-                pl.update({PLAYER_MEAN_TABLE.TOV: dumplist[9]})
-                pl.update({PLAYER_MEAN_TABLE.PER: dumplist[10]})
-
-        return self.sess
-
     def scrape_player(self):
         """scarpe raw data of each players"""
 
@@ -605,10 +230,13 @@ class SCRAPPING(Base_of):
         # clean date0
         self.sess = self.clean_date0()
         # check the date
-        self.sess  = self.check_date()
+        self.sess = self.check_date()
         # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         # find each post
         url_list = self.find_each_post()
+
+        # update id find the max id in all POOL object
+        self.id_current = self.sess.query(POOL).order_by(POOL.id.desc()).first().id + 1
 
         # find the information from each game
         for k in range(len(url_list)):
@@ -669,6 +297,7 @@ class SCRAPPING(Base_of):
                     k_number += 1
             new_player.pop(0)
             team_list.pop(0)
+
             # find name and plusminus per player from the text
             for i in new_player:
                 # find name
@@ -732,7 +361,6 @@ class SCRAPPING(Base_of):
                     turnovers_list)) / 15:
                 print('This URL ', url_list[k])
                 sys.exit("len of lists not match!")
-
             # update data
             zip_injection = zip(name_list, pm_list, ontime_list, score_list, off_rebounds_list, def_rebounds_list,
                                 assists_list, steals_list, blocks_list, fgm_list, fga_list, tpm_list, tpa_list,
@@ -750,122 +378,18 @@ class SCRAPPING(Base_of):
                     sys.exit("name or team is not string!")
                 if (type(score) != float) or (type(off_rebounds) != float):
                     sys.exit("score or off_rebounds is not float!")
-                a = self.sess.query(NBASTORAGE)
+
                 # qeury object
-                ep = a.filter(NBASTORAGE.playersname == name)
-                # NBASTORAGE object
+                ep = self.sess.query(POOL).filter(POOL.name == name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day)
                 ep_obj = ep.first()
                 if not ep_obj:
+                    self.debug.append(self.id_current)
                     # cannot find this player, create a new object
-                    tem = NBASTORAGE(name, team, [ontime] + [0.0] * 9, [score] + [0.0] * 9, [off_rebounds] + [0.0] * 9,
-                                     [def_rebounds] + [0.0] * 9, [assists] + [0.0] * 9, [steals] + [0.0] * 9,
-                                     [blocks] + [0.0] * 9, [fga] + [0.0] * 9, [fgm] + [0.0] * 9, [fta] + [0.0] * 9,
-                                     [ftm] + [0.0] * 9, [tpa] + [0.0] * 9, [tpm] + [0.0] * 9, [turnovers] + [0.0] * 9,
-                                     [fouls] + [0.0] * 9, [pm] + [0.0] * 9)
+                    tem = POOL(self.id_current, name, team, self.year, self.month, self.day, ontime, score, off_rebounds, def_rebounds, assists, steals, blocks, fga, fgm, fta, ftm, tpa,
+                    tpm, turnovers, fouls, pm)
                     self.sess.add(tem)
-
-                else:
-                    # find it! and update
-                    # update each
-                    self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                        {NBASTORAGE.team: team})
-
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ontime" + str(
-                                i + 1) + ": NBASTORAGE.ontime" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.ontime0: float(ontime)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.PTS" + str(
-                                i + 1) + ": NBASTORAGE.PTS" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.PTS0: float(score)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.ORB" + str(
-                                i + 1) + ": NBASTORAGE.ORB" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.ORB0: float(off_rebounds)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.DRB" + str(
-                                i + 1) + ": NBASTORAGE.DRB" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.DRB0: float(def_rebounds)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.AST" + str(
-                                i + 1) + ": NBASTORAGE.AST" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.AST0: float(assists)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.STL" + str(
-                                i + 1) + ": NBASTORAGE.STL" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.STL0: float(steals)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.BLK" + str(
-                                i + 1) + ": NBASTORAGE.BLK" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.BLK0: float(blocks)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.FGA" + str(
-                                i + 1) + ": NBASTORAGE.FGA" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.FGA0: float(fga)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.FGM" + str(
-                                i + 1) + ": NBASTORAGE.FGM" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.FGM0: float(fgm)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.FTA" + str(
-                                i + 1) + ": NBASTORAGE.FTA" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.FTA0: float(fta)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.FTM" + str(
-                                i + 1) + ": NBASTORAGE.FTM" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.FTM0: float(ftm)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.TPA" + str(
-                                i + 1) + ": NBASTORAGE.TPA" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.TPA0: float(tpa)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.TPM" + str(
-                                i + 1) + ": NBASTORAGE.TPM" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.TPM0: float(tpm)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.TOV" + str(
-                                i + 1) + ": NBASTORAGE.TOV" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.TOV0: float(turnovers)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.PF" + str(
-                                i + 1) + ": NBASTORAGE.PF" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.PF0: float(fouls)})
-                    for i in range(8, -1, -1):
-                        exec(
-                            "self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update({NBASTORAGE.plusminus" + str(
-                                i + 1) + ": NBASTORAGE.plusminus" + str(i) + "})")
-                        self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == name).update(
-                            {NBASTORAGE.plusminus0: float(pm)})
+                    # update id
+                    self.id_current += 1
         return self.sess
 
     def scrape_league(self):
@@ -953,76 +477,82 @@ class SCRAPPING(Base_of):
 
 
 class ANALYSIS(Base_of):
-    
-    def __init__(self):
+    def __init__(self, year, month, day):
         super().__init__()
         self.total_MP_eachgame = [0]*10
-        self.accumulated_aPER0 = 0
+        self.accumulated_aPER = 0
+        self.year = year
+        self.month = month
+        self.day = day
+
+
+        self.namelist = []
+        self.compresstime_data = []
     def ana_best(self):
         """Find the best data among all the players"""
 
         # best data
-        print("best~")
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.PTS0.desc()).first()
+        print("best...")
+        a = self.sess.query(POOL).order_by(POOL.PTS.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').first():
-            tem = BEST_TABLE(a.playersname, 'PTS', a.PTS0)
+            tem = BEST_TABLE(a.name, 'PTS', a.PTS)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.PTS0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.PTS})
 
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.AST0.desc()).first()
+        a = self.sess.query(POOL).order_by(POOL.AST.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').first():
-            tem = BEST_TABLE(a.playersname, 'AST', a.AST0)
+            tem = BEST_TABLE(a.name, 'AST', a.AST)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.AST0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.AST})
 
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.BLK0.desc()).first()
+        a = self.sess.query(POOL).order_by(POOL.BLK.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').first():
-            tem = BEST_TABLE(a.playersname, 'BLK', a.BLK0)
+            tem = BEST_TABLE(a.name, 'BLK', a.BLK)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.BLK0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.BLK})
 
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.TOV0.desc()).first()
+        a = self.sess.query(POOL).order_by(POOL.TOV.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').first():
-            tem = BEST_TABLE(a.playersname, 'TOV', a.TOV0)
+            tem = BEST_TABLE(a.name, 'TOV', a.TOV)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.TOV0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.TOV})
 
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.EFF0.desc()).first()
+        a = self.sess.query(POOL).order_by(POOL.EFF.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').first():
-            tem = BEST_TABLE(a.playersname, 'EFF', a.EFF0)
+            tem = BEST_TABLE(a.name, 'EFF', a.EFF)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.EFF0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.EFF})
 
-        a = self.sess.query(NBASTORAGE).order_by(NBASTORAGE.PER0.desc()).first()
+        a = self.sess.query(POOL).order_by(POOL.PER.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').first():
-            tem = BEST_TABLE(a.playersname, 'PER', a.PER0)
+            tem = BEST_TABLE(a.name, 'PER', a.PER)
             self.sess.add(tem)
         else:
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').update(
-                {BEST_TABLE.bestname: a.playersname, BEST_TABLE.data: a.PER0})
+                {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.PER})
         return self.sess
 
     def eff_calculation(self):
-        """After scraping, this method can calculate EFF0 for each player."""
-
-        a = self.sess.query(NBASTORAGE).all()
+        """After scraping, this method can calculate EFF for each player."""
+        # Choose those EFF is equal to zero, even if some of those were already calculated.
+        a = self.sess.query(POOL).filter(POOL.EFF == 0.0, POOL.year ).all()
         for player in a:
             # these data are float type~
-            eff = player.PTS0 + +player.ORB0 + +player.DRB0 + +player.AST0 + player.STL0 + player.BLK0 - (player.FGA0 - player.FGM0) - (player.FTA0 - player.FTM0) - player.TOV0
-            self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.EFF0: eff})
-            print(player.playersname, 'finish EFF calculation:', player.EFF0)
+            eff = player.PTS + +player.ORB + +player.DRB + +player.AST + player.STL + player.BLK - (player.FGA - player.FGM) - (player.FTA - player.FTM) - player.TOV
+            self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.EFF: eff})
+            print(player.name, 'finish EFF calculation:', player.EFF)
         return self.sess
-    
+
     def league_parameter_calculation(self):
         """After scraping, this method can calculate some parameters in league, including  factor, VOP and DRBP."""
         ##league constant factor
@@ -1038,15 +568,15 @@ class ANALYSIS(Base_of):
         DRBP = ((b.drb_per_g + b.orb_per_g) - b.orb_per_g) / (b.drb_per_g + b.orb_per_g)
         # update to session
         self.sess.query(LEAGUE_TABLE).update({LEAGUE_TABLE.factor: factor, LEAGUE_TABLE.VOP: VOP, LEAGUE_TABLE.DRBP: DRBP})
-        
+
         return self.sess
-    
+
     def team_parameter_calculation(self):
         ##team constant factor
         totalteam_list = ['ATL', 'BRK', 'BOS', 'CHO', 'CHI', 'CLE', 'DAL', 'DEN', 'DET', 'GSW', 'HOU', 'IND', 'LAC',
                           'LAL', 'MEM', 'MIA', 'MIL', 'MIN', 'NOP', 'NYK', 'OKC', 'ORL', 'PHI', 'PHO', 'POR', 'SAC',
                           'SAS', 'TOR', 'UTA', 'WAS']
-        
+
         cc = self.sess.query(TEAM_TABLE)
         for t in totalteam_list:
             # query. eg: ATL and oppATL
@@ -1067,113 +597,150 @@ class ANALYSIS(Base_of):
             cc_query.filter(TEAM_TABLE.teamsname == t).update(
                 {TEAM_TABLE.tmPOSS: tmPoss, TEAM_TABLE.oppPOSS: oppPoss, TEAM_TABLE.tmPACE: tmPace})
             print(t, ' tmPACE is ', cc_query.filter(TEAM_TABLE.teamsname == t).first().tmPACE)
-        
+
         return self.sess
-    
+
     def a_per_calculation(self):
         """After scraping, this method can calculate adjested PER in the latest game for each player."""
-        
+
         # import league data
         lg = self.sess.query(LEAGUE_TABLE).first()
-        for player in self.sess.query(NBASTORAGE).all():
+        for player in self.sess.query(POOL).filter(POOL.aPER == 0.0).all():
             # team object eg: t_obj.ast_per_g
             # player object eg: player.AST
             t_obj = self.sess.query(TEAM_TABLE).filter(TEAM_TABLE.teamsname == player.team).first()
             if not t_obj:
-                sys.exit(player.playersname + 'cannot find his team!')
+                sys.exit(player.name + 'cannot find his team!')
 
             # unadjusted PER
-            if player.ontime0 >= 5:
-                r_min = (1 / player.ontime0)
+            if player.ontime >= 5:
+                r_min = (1 / player.ontime)
             else:
                 r_min = 0
 
-            block1 = player.TPM0
-            block2 = (2/3)*player.AST0
+            block1 = player.TPM
+            block2 = (2/3)*player.AST
             # (tmAST/tmFGM) is that the preference of scoring from others AST or personal offense
             preference_of_scoring = (t_obj.ast_per_g / t_obj.fgm_per_g)
-            block3 = (2 - lg.factor*preference_of_scoring)*player.FGM0
+            block3 = (2 - lg.factor*preference_of_scoring)*player.FGM
             # free throw considering (tmAST/tmFG)
-            block4 = (player.FTM0*0.5*(2-(1/3)*preference_of_scoring))
+            block4 = (player.FTM*0.5*(2-(1/3)*preference_of_scoring))
             # turnovers
-            block5 = lg.VOP*player.TOV0
+            block5 = lg.VOP*player.TOV
             # missing field goal
-            block6 = lg.VOP*lg.DRBP*(player.FGA0 - player.FGM0)
+            block6 = lg.VOP*lg.DRBP*(player.FGA - player.FGM)
             # missing free throw
-            block7 = lg.VOP*0.44*(0.44+(0.56*lg.DRBP))*(player.FTA0 - player.FTM0)
+            block7 = lg.VOP*0.44*(0.44+(0.56*lg.DRBP))*(player.FTA - player.FTM)
             # defense rebounds
-            total_RB = player.ORB0 + player.DRB0
-            block8 = lg.VOP*(1-lg.DRBP)*(total_RB - player.ORB0)
+            total_RB = player.ORB + player.DRB
+            block8 = lg.VOP*(1-lg.DRBP)*(total_RB - player.ORB)
             # offense rebounds
-            block9 = lg.VOP*lg.DRBP*player.ORB0
+            block9 = lg.VOP*lg.DRBP*player.ORB
             # steal
-            block10 = lg.VOP*player.STL0
+            block10 = lg.VOP*player.STL
             # block considering defense rebounds
-            block11 = lg.VOP*lg.DRBP*player.BLK0
+            block11 = lg.VOP*lg.DRBP*player.BLK
             # fouls considering the effect after foul
-            block12 = player.PF0*((lg.ftm_per_g/lg.pf_per_g)-0.44*(lg.fta_per_g/lg.pf_per_g)*lg.VOP)
+            block12 = player.PF*((lg.ftm_per_g/lg.pf_per_g)-0.44*(lg.fta_per_g/lg.pf_per_g)*lg.VOP)
             uPER = r_min * (block1 + block2 + block3 + block4 - block5 - block6 - block7 + block8 + block9 + block10 + block11 - block12)
             # aPER
             aPER = round(uPER * (lg.pace / t_obj.tmPACE), 2)
-            self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.aPER0: aPER})
-            print('calculate', player.playersname, "'s aPER0: ", aPER)
+            self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.aPER: aPER})
+            print('calculate', player.name, "'s aPER: ", aPER)
 
         return self.sess
-
-    def total_MP_map(self):
-        for i in range(10):
-            for player in self.sess.query(NBASTORAGE).all():
-                exec("self.total_MP_eachgame["+str(i)+"] += player.ontime"+str(i))
-        print('total_MP_eachgame0:', self.total_MP_eachgame[0], 'total_MP_eachgame1:', self.total_MP_eachgame[1])
 
     def per_calculation(self):
         ## calculate lg_aPER(sigma(MPi*aPERi/Min))
-        # accumulate aPER
+        # accumulate player's aPER which is not equal to zero.
         buffer = []
-        a = self.sess.query(NBASTORAGE).all()
+        a = self.sess.query(POOL).all()
         for player in a:
-            buffer.append(player.aPER0)
-        self.accumulated_aPER0 = np.mean(buffer)
+            buffer.append(player.aPER != 0.0)
+        self.accumulated_aPER = np.mean(buffer)
 
         ## calculate PER
+        # only calculate Today PER
+        a = self.sess.query(POOL).filter(POOL.PER != 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
-            if self.accumulated_aPER0 != 0:
-                PER = round(player.aPER0*(15/self.accumulated_aPER0),2)
-            elif self.accumulated_aPER0 == 0:
+            if self.accumulated_aPER != 0:
+                PER = round(player.aPER*(15/self.accumulated_aPER), 2)
+            elif self.accumulated_aPER == 0:
                 PER = 0
-            for i in range(8,-1,-1):
-                exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.PER"+str(i+1)+": NBASTORAGE.PER"+str(i)+"})")
-            exec("self.sess.query(NBASTORAGE).filter(NBASTORAGE.playersname == player.playersname).update({NBASTORAGE.PER0: float(PER)})")
-            print(player.playersname,"'s PER0 is: ",PER)
+            self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.PER: float(PER)})
+            print(player.name,"'s PER is: ",PER)
         return self.sess
 
+    # def total_MP_map(self):
+    #     for i in range(10):
+    #         for player in self.sess.query(NBASTORAGE).all():
+    #             exec("self.total_MP_eachgame["+str(i)+"] += player.ontime"+str(i))
+    #     print('total_MP_eachgame0:', self.total_MP_eachgame[0], 'total_MP_eachgame1:', self.total_MP_eachgame[1])
+
+    def compresstime_of_each_player(self, time_length):
+        """compress time axis"""
+        # name list TODO need to be optimize!!!!!
+        a = self.sess.query(POOL).limit(int(time_length)).all()
+        for row in a:
+            if row.name not in self.namelist:
+                self.namelist.append(row.name)
+        # compress
+        self.compresstime_data = [[0]*18]*len(self.namelist)
+        for i in range(len(self.namelist)):
+            # calculate one player at a time
+            a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).all()
+            data_list = [0]*19
+            # Sum total time
+            for different_time_player in a:
+                data_list[0] += different_time_player.ontime
+            for different_time_player in a:
+                # Ratio
+                ratio = (different_time_player.ontime / data_list[0])
+                # Average these data by multiplying the ratio for each game
+                data_list[1] += different_time_player.PTS * ratio
+                data_list[2] += different_time_player.ORB * ratio
+                data_list[3] += different_time_player.DRB * ratio
+                data_list[4] += different_time_player.AST * ratio
+                data_list[5] += different_time_player.STL * ratio
+                data_list[6] += different_time_player.BLK * ratio
+                data_list[7] += different_time_player.FGA * ratio
+                data_list[8] += different_time_player.FGM * ratio
+                data_list[9] += different_time_player.FTA * ratio
+                data_list[10] += different_time_player.FTM * ratio
+                data_list[11] += different_time_player.TPA * ratio
+                data_list[12] += different_time_player.TPM * ratio
+                data_list[13] += different_time_player.TOV * ratio
+                data_list[14] += different_time_player.PF * ratio
+                data_list[15] += different_time_player.plusminus * ratio
+                data_list[16] += different_time_player.aPER * ratio
+                data_list[17] += different_time_player.PER * ratio
+                data_list[18] += different_time_player.EFF * ratio
+        self.compresstime_data[i] = data_list[1:]
+        return self.compresstime_data
+
+    # def last_ten_game(self):
 
 ###############################################################################
-###############################################################################
-###############################################################################
-''' Table '''
-conn,session = SCRAPPING().call_session()
-###############################################################################
+conn, session = Base_of().call_session()
 # database obj
-Base_players = declarative_base()
-Base_teams = declarative_base()
-Base_league = declarative_base()
-Base_date = declarative_base()
-Base_mean = declarative_base()
-Base_best = declarative_base()
+Base = declarative_base()
+
+
 ###############################################################################
 
-class LEAGUE_TABLE(Base_league):
+class LEAGUE_TABLE(Base):
     __tablename__ = 'league_data'
-    mark = ['fgm_per_g','fga_per_g','ftm_per_g','fta_per_g','pts_per_g','ast_per_g','orb_per_g','drb_per_g','tov_per_g','pf_per_g','pace','factor','VOP','DRBP']
-    lgname = Column('league',String(10),primary_key=True,index=True)
+    mark = ['fgm_per_g', 'fga_per_g', 'ftm_per_g', 'fta_per_g', 'pts_per_g', 'ast_per_g', 'orb_per_g', 'drb_per_g',
+            'tov_per_g', 'pf_per_g', 'pace', 'factor', 'VOP', 'DRBP']
+    lgname = Column('league', String(10), primary_key=True, index=True)
     for col in mark:
-        exec(col+"=Column('"+col+"',Float)")
+        exec(col + "=Column('" + col + "',Float)")
 
-    def __init__(self,lgname,fgm_per_g,fga_per_g,ftm_per_g,fta_per_g,pts_per_g,ast_per_g,orb_per_g,drb_per_g,tov_per_g,pf_per_g,pace):
+    def __init__(self, lgname, fgm_per_g, fga_per_g, ftm_per_g, fta_per_g, pts_per_g, ast_per_g, orb_per_g, drb_per_g,
+                 tov_per_g, pf_per_g, pace):
         self.lgname = 'league'
         for col in self.mark[:11]:
-            exec("self."+col+"="+col)
+            exec("self." + col + "=" + col)
         self.factor = 0.0
         self.VOP = 0.0
         self.DRBP = 0.0
@@ -1193,21 +760,25 @@ class LEAGUE_TABLE(Base_league):
         repr_str12 = "PF: {}\n"
         repr_str13 = "Pace: {}\n"
         repr_str14 = ")>"
-        repr_str = repr_str1+repr_str2+repr_str3+repr_str4+repr_str5+repr_str6+repr_str7+repr_str8+repr_str9+repr_str10+repr_str11+repr_str12+repr_str13+repr_str14
-        return repr_str.format(self.lgname,self.fgm_per_g,self.fga_per_g,self.ftm_per_g,self.fta_per_g,self.pts_per_g,self.ast_per_g,self.orb_per_g,self.drb_per_g,self.tov_per_g,self.pf_per_g,self.pace)
+        repr_str = repr_str1 + repr_str2 + repr_str3 + repr_str4 + repr_str5 + repr_str6 + repr_str7 + repr_str8 + repr_str9 + repr_str10 + repr_str11 + repr_str12 + repr_str13 + repr_str14
+        return repr_str.format(self.lgname, self.fgm_per_g, self.fga_per_g, self.ftm_per_g, self.fta_per_g,
+                               self.pts_per_g, self.ast_per_g, self.orb_per_g, self.drb_per_g, self.tov_per_g,
+                               self.pf_per_g, self.pace)
 
 
-class PLAYER_MEAN_TABLE(Base_mean):
+class PLAYER_MEAN_TABLE(Base):
     __tablename__ = 'player_mean_data'
-    name = Column('name',String(40),primary_key=True,index=True)
-    mark = ['ontime','PTS','AST','STL','BLK','FGA','FGM','FTA','FTM','TPA','TPM','ORB','DRB','TOV','PF','plusminus','aPER','PER','EFF']
+    name = Column('name', String(40), primary_key=True, index=True)
+    mark = ['ontime', 'PTS', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'ORB', 'DRB', 'TOV', 'PF',
+            'plusminus', 'aPER', 'PER', 'EFF']
     for col in mark:
-        exec(col+"=Column('"+col+"',Float)")
+        exec(col + "=Column('" + col + "',Float)")
 
-    def __init__(self,name,ontime,PTS,AST,STL,BLK,FGA,FGM,FTA,FTM,TPA,TPM,ORB,DRB,TOV,PF,plusminus,aPER,PER,EFF):
+    def __init__(self, name, ontime, PTS, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA, TPM, ORB, DRB, TOV, PF, plusminus,
+                 aPER, PER, EFF):
         self.name = name
         for col in self.mark:
-            exec("self."+col+"="+col)
+            exec("self." + col + "=" + col)
 
     def __repr__(self):
         repr_str1 = "<PLAYER_MEAN_TABLE(\n"
@@ -1232,21 +803,25 @@ class PLAYER_MEAN_TABLE(Base_mean):
         repr_str19 = "PER: {}\n"
         repr_str20 = "EFF: {}\n"
         repr_str21 = ")>"
-        repr_str = repr_str1+repr_str1_5+repr_str2+repr_str3+repr_str4+repr_str5+repr_str6+repr_str7+repr_str8+repr_str9+repr_str10+repr_str11+repr_str12+repr_str13+repr_str14+repr_str15+repr_str16+repr_str17+repr_str18+repr_str19+repr_str20+repr_str21
-        return repr_str.format(self.name,self.ontime,self.PTS,self.AST,self.STL,self.BLK,self.FGA,self.FGM,self.FTA,self.FTM,self.TPA,self.TPM,self.ORB,self.DRB,self.TOV,self.PF,self.plusminus,self.aPER,self.PER,self.EFF)
+        repr_str = repr_str1 + repr_str1_5 + repr_str2 + repr_str3 + repr_str4 + repr_str5 + repr_str6 + repr_str7 + repr_str8 + repr_str9 + repr_str10 + repr_str11 + repr_str12 + repr_str13 + repr_str14 + repr_str15 + repr_str16 + repr_str17 + repr_str18 + repr_str19 + repr_str20 + repr_str21
+        return repr_str.format(self.name, self.ontime, self.PTS, self.AST, self.STL, self.BLK, self.FGA, self.FGM,
+                               self.FTA, self.FTM, self.TPA, self.TPM, self.ORB, self.DRB, self.TOV, self.PF,
+                               self.plusminus, self.aPER, self.PER, self.EFF)
 
 
-class TEAM_TABLE(Base_teams):
+class TEAM_TABLE(Base):
     __tablename__ = 'team_data'
-    mark = ['mp_per_g','ast_per_g','fgm_per_g','fga_per_g','fta_per_g','orb_per_g','drb_per_g','tov_per_g','tmPOSS','oppPOSS','tmPACE']
-    teamsname = Column('team',String(7),primary_key=True,index=True)
+    mark = ['mp_per_g', 'ast_per_g', 'fgm_per_g', 'fga_per_g', 'fta_per_g', 'orb_per_g', 'drb_per_g', 'tov_per_g',
+            'tmPOSS', 'oppPOSS', 'tmPACE']
+    teamsname = Column('team', String(7), primary_key=True, index=True)
     for col in mark:
-        exec(col+"=Column('"+col+"',Float)")
+        exec(col + "=Column('" + col + "',Float)")
 
-    def __init__(self,teamsname,mp_per_g,ast_per_g,fgm_per_g,fga_per_g,fta_per_g,orb_per_g,drb_per_g,tov_per_g):
+    def __init__(self, teamsname, mp_per_g, ast_per_g, fgm_per_g, fga_per_g, fta_per_g, orb_per_g, drb_per_g,
+                 tov_per_g):
         self.teamsname = teamsname
         for col in self.mark[:8]:
-            exec("self."+col+"="+col)
+            exec("self." + col + "=" + col)
         self.tmPOSS = 0.0
         self.oppPOSS = 0.0
         self.tmPACE = 0.0
@@ -1263,88 +838,113 @@ class TEAM_TABLE(Base_teams):
         repr_str9 = "DRB: {}\n"
         repr_str10 = "TOV: {}\n"
         repr_str11 = ")>"
-        repr_str = repr_str1+repr_str2+repr_str3+repr_str4+repr_str5+repr_str6+repr_str7+repr_str8+repr_str9+repr_str10+repr_str11
-        return repr_str.format(self.teamsname,self.mp_per_g,self.ast_per_g,self.fgm_per_g,self.fga_per_g,self.fta_per_g,self.orb_per_g,self.drb_per_g,self.tov_per_g)
+        repr_str = repr_str1 + repr_str2 + repr_str3 + repr_str4 + repr_str5 + repr_str6 + repr_str7 + repr_str8 + repr_str9 + repr_str10 + repr_str11
+        return repr_str.format(self.teamsname, self.mp_per_g, self.ast_per_g, self.fgm_per_g, self.fga_per_g,
+                               self.fta_per_g, self.orb_per_g, self.drb_per_g, self.tov_per_g)
 
 
-class BEST_TABLE(Base_best):
+class BEST_TABLE(Base):
     __tablename__ = 'best_data'
     best = Column('best', String(10), primary_key=True, index=True)
-    bestname = Column('bestname', String(40),index=True)
+    bestname = Column('bestname', String(40), index=True)
     data = Column('data', Float)
-    
-    def __init__(self,bestname,best,data):
+
+    def __init__(self, bestname, best, data):
         self.bestname = bestname
         self.best = best
         self.data = data
-        
+
     def __repr__(self):
-        return "best_table\nname:{}\nbest:{}\ndata:{}\n".format(self.bestname, self.best,self.data)
+        return "best_table\nname:{}\nbest:{}\ndata:{}\n".format(self.bestname, self.best, self.data)
 
 
-class DATE_TABLE(Base_date):
+class DATE_TABLE(Base):
     __tablename__ = 'date_data'
     today = Column('today', String(5), primary_key=True, index=True)
     for i in range(10):
-        exec("date"+str(i)+"=Column('data"+str(i)+"',String(5),index=True)")
+        exec("date" + str(i) + "=Column('data" + str(i) + "',String(5),index=True)")
 
-    def __init__(self,today,date):
+    def __init__(self, today, date):
         self.today = today
         for i in range(10):
-            exec("self.date"+str(i)+"=date["+str(i)+"]")
+            exec("self.date" + str(i) + "=date[" + str(i) + "]")
 
     def __repr__(self):
         return "<DATE({},{},{},{})>".format(self.today, self.date0, self.date1, self.date2)
 
 
-class NBASTORAGE(Base_players):
-    __tablename__ = 'nba_players_data'
-    playersname = Column('name',String(40),index=True,primary_key=True)
-    team = Column('team',String(5),index=True)
-    #float column (19 columns)
-    col_list = ['ontime','PTS','ORB','DRB','AST','STL','BLK','FGA','FGM','FTA','FTM','TPA','TPM','TOV','PF','plusminus','aPER','PER','EFF']
+class POOL(Base):
+    __tablename__ = 'Nba_players_data'
+    id = Column('ID', Integer, primary_key=True)
+    name = Column('name', String(40), index=True)
+    team = Column('team', String(5), index=True)
+    year = Column('Year', Integer)
+    month = Column('Month', Integer)
+    day = Column('Day', Integer)
+    # float column (19 columns)
+    col_list = ['ontime', 'PTS', 'ORB', 'DRB', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'TOV',
+                'PF', 'plusminus', 'aPER', 'PER', 'EFF']
     for col in col_list:
-        for i,j in zip(range(10),range(10)):
-            exec(col+str(i)+"=Column('"+col+str(i)+"',Float)")
-    def __init__(self,playersname,team,ontime,PTS,ORB,DRB,AST,STL,BLK,FGA,FGM,FTA,FTM,TPA,TPM,TOV,PF,plusminus):
-        #initiation
-        self.playersname = playersname
+        exec(col + "= Column('" + col + "',Float)")
+
+    def __init__(self, id, name, team, year, month, day, ontime, PTS, ORB, DRB, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA,
+                 TPM, TOV, PF, plusminus):
+        self.id = id
+        self.name = name
         self.team = team
+        self.year = year
+        self.month = month
+        self.day = day
         for col in self.col_list[:16]:
-            for i,j in zip(range(10),range(10)):
-                exec("self."+col+str(i)+"="+col+"["+str(j)+"]")
-        for i in range(10):
-            exec("self.aPER"+str(i)+"=0.0")
-        for i in range(10):
-            exec("self.PER"+str(i)+"=0.0")
-        for i in range(10):
-            exec("self.EFF"+str(i)+"=0.0")
+            exec("self." + col + "=" + col)
+        self.aPER = 0.0
+        self.PER = 0.0
+        self.EFF = 0.0
+
     def __repr__(self):
-        dic = {'n':self.playersname,'t':self.team}
-        dic_cont1 = {'time0':self.ontime0,'PTS0':self.PTS0,'ORB0':self.ORB0,'DRB0':self.DRB0}
-        dic_cont2 = {'AST0':self.AST0,'STL0':self.STL0,'BLK0':self.BLK0,'FGA0':self.FGA0}
-        dic_cont3 = {'FGM0':self.FGM0,'FTA0':self.FTA0,'FTM0':self.FTM0,'TPA0':self.TPA0}
-        dic_cont4 = {'TPM0':self.TPM0,'TOV0':self.TOV0,'PF0':self.PF0,'plusminus0':self.plusminus0}
-        #merge dict
-        dic = {**dic,**dic_cont1,**dic_cont2,**dic_cont3,**dic_cont4}
-        str_dic = ["<NBASTORAGE(",")"]
-        for i in list(dic.keys()):
-            if (i != 'n') and (i != 't'):
-                str_dic.insert(1,i+":{0["+i+"]},")
-        str_dic.insert(1,"team:{0[t]},")
-        str_dic.insert(1,"name:{0[n]},")
-        #rejoin into a str
-        out = " ".join(str_dic)
-        return out.format(dic)
-    
+        return "POOL:\nname:{}\nteam:{}\nontime:{}\nPTS:{}\nORB:{}\nDRB:{}\nAST:{}\nSTL:{}\nBLK:{}\nFGA:{}\n" \
+               "FGM:{}\nFTA:{}\nFTM:{}\nTPA:{}\nTPM:{}\nTOV:{}\nPF:{}\nplusminus:{}".format(self.name, self.team
+                                                                                            , self.ontime, self.PTS,
+                                                                                            self.ORB, self.DRB,
+                                                                                            self.AST, self.STL,
+                                                                                            self.BLK, self.FGA, self.FGM
+                                                                                            , self.FTA, self.FTM,
+                                                                                            self.TPA, self.TPM,
+                                                                                            self.TOV, self.PF,
+                                                                                            self.plusminus)
+
+
+# class Baseline(Base):
+#     __tablename__ = 'Baseline_of_each_player'
+#     name = Column('Name', String(40), primary_key=True)
+#     col_list = ['ontime', 'PTS', 'ORB', 'DRB', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'TOV',
+#                 'PF', 'plusminus', 'aPER', 'PER', 'EFF']
+#     for col in col_list:
+#         exec(col + "= Column('" + col + "',Float)")
+#
+#     def __init__(self, name, ontime, PTS, ORB, DRB, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA,
+#                  TPM, TOV, PF, plusminus, aPER, PER, EFF):
+#         self.name = name
+#         for col in self.col_list:
+#             exec("self." + col + "=" + col)
+#
+#     def __repr__(self):
+#         return "Baseline:\nname:{}\nontime:{}\nPTS:{}\nORB:{}\nDRB:{}\nAST:{}\nSTL:{}\nBLK:{}\nFGA:{}\n" \
+#                "FGM:{}\nFTA:{}\nFTM:{}\nTPA:{}\nTPM:{}\nTOV:{}\nPF:{}\nplusminus:{}\nPER:{}\nEFF:{}\n".format(self.name,
+#                                                                                             self.ontime, self.PTS,
+#                                                                                             self.ORB, self.DRB,
+#                                                                                             self.AST, self.STL,
+#                                                                                             self.BLK, self.FGA, self.FGM
+#                                                                                             ,self.FTA, self.FTM,
+#                                                                                             self.TPA, self.TPM,
+#                                                                                             self.TOV, self.PF,
+#                                                                                             self.plusminus, self.PER,
+#                                                                                             self.EFF)
+
+
 ###############################################################################
 # connect engine to database obj
-Base_players.metadata.create_all(conn)
-Base_teams.metadata.create_all(conn)
-Base_league.metadata.create_all(conn)
-Base_date.metadata.create_all(conn)
-Base_mean.metadata.create_all(conn)
-Base_best.metadata.create_all(conn)
+Base.metadata.create_all(conn)
 ###############################################################################
 # flushing(update database through conducting the change by SQL commands)
 session.commit()

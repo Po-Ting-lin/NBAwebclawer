@@ -1,9 +1,8 @@
 
-from nba_players_class import SCRAPPING,TEAM_TABLE,LEAGUE_TABLE,NBASTORAGE,PLAYER_MEAN_TABLE,BEST_TABLE,DATE_TABLE
+from nba_players_class import SCRAPPING,TEAM_TABLE,LEAGUE_TABLE,PLAYER_MEAN_TABLE,BEST_TABLE,DATE_TABLE,Base_of,POOL
 
 
-
-ana = SCRAPPING()
+ana = Base_of()
 conn, session = ana.call_session()
 
 # demo of update function
