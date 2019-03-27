@@ -485,8 +485,9 @@ class ANALYSIS(Base_of):
         self.month = month
         self.day = day
 
-
+        self.id_current = 0
         self.namelist = []
+        self.baseline = []
         self.compresstime_data = []
     def ana_best(self):
         """Find the best data among all the players"""
@@ -677,54 +678,95 @@ class ANALYSIS(Base_of):
     #             exec("self.total_MP_eachgame["+str(i)+"] += player.ontime"+str(i))
     #     print('total_MP_eachgame0:', self.total_MP_eachgame[0], 'total_MP_eachgame1:', self.total_MP_eachgame[1])
 
-    def compresstime_of_each_player(self, time_length):
+    def compresstime_of_each_player(self, time_length=-1):
         """compress time axis"""
         # name list TODO need to be optimize!!!!!
-        a = self.sess.query(POOL).limit(int(time_length)).all()
+        a = self.sess.query(POOL).all()
         for row in a:
             if row.name not in self.namelist:
                 self.namelist.append(row.name)
         # compress
         self.compresstime_data = [[0]*18]*len(self.namelist)
+        # check current id
+        try:
+            self.id_current = self.sess.query(PLAYER_PERCENTAGE_TABLE).order_by(PLAYER_PERCENTAGE_TABLE.id.desc()).first().id + 1
+        except:
+            self.id_current = 1
         for i in range(len(self.namelist)):
             # calculate one player at a time
-            a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).all()
+            if time_length == -1:
+                a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).all()
+            else:
+                a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).limit(time_length).all()
             data_list = [0]*19
             # Sum total time
-            for different_time_player in a:
-                data_list[0] += different_time_player.ontime
-            for different_time_player in a:
-                # Ratio
-                ratio = (different_time_player.ontime / data_list[0])
-                # Average these data by multiplying the ratio for each game
-                data_list[1] += different_time_player.PTS * ratio
-                data_list[2] += different_time_player.ORB * ratio
-                data_list[3] += different_time_player.DRB * ratio
-                data_list[4] += different_time_player.AST * ratio
-                data_list[5] += different_time_player.STL * ratio
-                data_list[6] += different_time_player.BLK * ratio
-                data_list[7] += different_time_player.FGA * ratio
-                data_list[8] += different_time_player.FGM * ratio
-                data_list[9] += different_time_player.FTA * ratio
-                data_list[10] += different_time_player.FTM * ratio
-                data_list[11] += different_time_player.TPA * ratio
-                data_list[12] += different_time_player.TPM * ratio
-                data_list[13] += different_time_player.TOV * ratio
-                data_list[14] += different_time_player.PF * ratio
-                data_list[15] += different_time_player.plusminus * ratio
-                data_list[16] += different_time_player.aPER * ratio
-                data_list[17] += different_time_player.PER * ratio
-                data_list[18] += different_time_player.EFF * ratio
+            if self.sess.query(POOL).filter(POOL.name == self.namelist[i]):
+                for different_time_player in a:
+                    data_list[0] += different_time_player.ontime
+                print(self.namelist[i], data_list[0])
+                if data_list[0] != 0:
+                    for different_time_player in a:
+                        # Ratio
+                        ratio = (different_time_player.ontime / data_list[0])
+                        # Average these data by multiplying the ratio for each game
+                        data_list[1] += different_time_player.PTS * ratio
+                        data_list[2] += different_time_player.ORB * ratio
+                        data_list[3] += different_time_player.DRB * ratio
+                        data_list[4] += different_time_player.AST * ratio
+                        data_list[5] += different_time_player.STL * ratio
+                        data_list[6] += different_time_player.BLK * ratio
+                        data_list[7] += different_time_player.FGA * ratio
+                        data_list[8] += different_time_player.FGM * ratio
+                        data_list[9] += different_time_player.FTA * ratio
+                        data_list[10] += different_time_player.FTM * ratio
+                        data_list[11] += different_time_player.TPA * ratio
+                        data_list[12] += different_time_player.TPM * ratio
+                        data_list[13] += different_time_player.TOV * ratio
+                        data_list[14] += different_time_player.PF * ratio
+                        data_list[15] += different_time_player.plusminus * ratio
+                        data_list[16] += different_time_player.aPER * ratio
+                        data_list[17] += different_time_player.PER * ratio
+                        data_list[18] += different_time_player.EFF * ratio
+
+                        # save the average
+                        query_find = self.sess.query(PLAYER_PERCENTAGE_TABLE).filter(PLAYER_PERCENTAGE_TABLE.name == self.namelist[i],
+                                                                                     PLAYER_PERCENTAGE_TABLE.timelength == time_length)
+                        if query_find.first():
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.PTS: round(data_list[1],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.ORB: round(data_list[2],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.DRB: round(data_list[3],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.AST: round(data_list[4],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.STL: round(data_list[5],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.BLK: round(data_list[6],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.FGA: round(data_list[7],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.FGM: round(data_list[8],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.FTA: round(data_list[9],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.FTM: round(data_list[10],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.TPA: round(data_list[11],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.TPM: round(data_list[12],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.TOV: round(data_list[13],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.PF: round(data_list[14],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.plusminus: round(data_list[15],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.aPER: round(data_list[16],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.PER: round(data_list[17],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.EFF: round(data_list[18],2)})
+                        else:
+                            tem = PLAYER_PERCENTAGE_TABLE(self.id_current, self.namelist[i], time_length, data_list[1],
+                                                          data_list[4], data_list[5],
+                                                          data_list[6], data_list[7], data_list[8], data_list[9],
+                                                          data_list[10], data_list[11], data_list[12], data_list[2],
+                                                          data_list[3], data_list[13], data_list[14], data_list[15],
+                                                          data_list[16], data_list[17], data_list[18])
+                            self.sess.add(tem)
+                            self.id_current += 1
         self.compresstime_data[i] = data_list[1:]
-        return self.compresstime_data
-
-    # def last_ten_game(self):
-
+        return self.compresstime_data, self.sess
 ###############################################################################
+
+
 conn, session = Base_of().call_session()
 # database obj
 Base = declarative_base()
-
 
 ###############################################################################
 
@@ -766,24 +808,28 @@ class LEAGUE_TABLE(Base):
                                self.pf_per_g, self.pace)
 
 
-class PLAYER_MEAN_TABLE(Base):
-    __tablename__ = 'player_mean_data'
-    name = Column('name', String(40), primary_key=True, index=True)
-    mark = ['ontime', 'PTS', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'ORB', 'DRB', 'TOV', 'PF',
+class PLAYER_PERCENTAGE_TABLE(Base):
+    __tablename__ = 'player percentage'
+    id = Column('ID', Integer, primary_key = True)
+    name = Column('name', String(40), index=True)
+    timelength = Column('time length', Integer)
+    mark = ['PTS', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'ORB', 'DRB', 'TOV', 'PF',
             'plusminus', 'aPER', 'PER', 'EFF']
     for col in mark:
         exec(col + "=Column('" + col + "',Float)")
 
-    def __init__(self, name, ontime, PTS, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA, TPM, ORB, DRB, TOV, PF, plusminus,
+    def __init__(self, id, name, timelength, PTS, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA, TPM, ORB, DRB, TOV, PF, plusminus,
                  aPER, PER, EFF):
+        self.id = id
         self.name = name
+        self.timelength = timelength
         for col in self.mark:
             exec("self." + col + "=" + col)
 
     def __repr__(self):
         repr_str1 = "<PLAYER_MEAN_TABLE(\n"
         repr_str1_5 = "name: {}\n"
-        repr_str2 = "ontime: {}\n"
+        repr_str2 = "timelength: {}\n"
         repr_str3 = "PTS: {}\n"
         repr_str4 = "AST: {}\n"
         repr_str5 = "STL: {}\n"
@@ -804,7 +850,7 @@ class PLAYER_MEAN_TABLE(Base):
         repr_str20 = "EFF: {}\n"
         repr_str21 = ")>"
         repr_str = repr_str1 + repr_str1_5 + repr_str2 + repr_str3 + repr_str4 + repr_str5 + repr_str6 + repr_str7 + repr_str8 + repr_str9 + repr_str10 + repr_str11 + repr_str12 + repr_str13 + repr_str14 + repr_str15 + repr_str16 + repr_str17 + repr_str18 + repr_str19 + repr_str20 + repr_str21
-        return repr_str.format(self.name, self.ontime, self.PTS, self.AST, self.STL, self.BLK, self.FGA, self.FGM,
+        return repr_str.format(self.name, self.timelength, self.PTS, self.AST, self.STL, self.BLK, self.FGA, self.FGM,
                                self.FTA, self.FTM, self.TPA, self.TPM, self.ORB, self.DRB, self.TOV, self.PF,
                                self.plusminus, self.aPER, self.PER, self.EFF)
 
@@ -913,33 +959,6 @@ class POOL(Base):
                                                                                             self.TOV, self.PF,
                                                                                             self.plusminus)
 
-
-# class Baseline(Base):
-#     __tablename__ = 'Baseline_of_each_player'
-#     name = Column('Name', String(40), primary_key=True)
-#     col_list = ['ontime', 'PTS', 'ORB', 'DRB', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'TOV',
-#                 'PF', 'plusminus', 'aPER', 'PER', 'EFF']
-#     for col in col_list:
-#         exec(col + "= Column('" + col + "',Float)")
-#
-#     def __init__(self, name, ontime, PTS, ORB, DRB, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA,
-#                  TPM, TOV, PF, plusminus, aPER, PER, EFF):
-#         self.name = name
-#         for col in self.col_list:
-#             exec("self." + col + "=" + col)
-#
-#     def __repr__(self):
-#         return "Baseline:\nname:{}\nontime:{}\nPTS:{}\nORB:{}\nDRB:{}\nAST:{}\nSTL:{}\nBLK:{}\nFGA:{}\n" \
-#                "FGM:{}\nFTA:{}\nFTM:{}\nTPA:{}\nTPM:{}\nTOV:{}\nPF:{}\nplusminus:{}\nPER:{}\nEFF:{}\n".format(self.name,
-#                                                                                             self.ontime, self.PTS,
-#                                                                                             self.ORB, self.DRB,
-#                                                                                             self.AST, self.STL,
-#                                                                                             self.BLK, self.FGA, self.FGM
-#                                                                                             ,self.FTA, self.FTM,
-#                                                                                             self.TPA, self.TPM,
-#                                                                                             self.TOV, self.PF,
-#                                                                                             self.plusminus, self.PER,
-#                                                                                             self.EFF)
 
 
 ###############################################################################

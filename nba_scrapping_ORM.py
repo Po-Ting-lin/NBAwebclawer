@@ -10,8 +10,8 @@ from nba_players_class import TEXT,LEAGUE,TEAM,SCRAPPING,POOL,TEAM_TABLE,LEAGUE_
 
 ###############################################################################
 if __name__ == '__main__':
-    decision1 = 'y'
-    decision2 = 'n'
+    decision1 = 'n'
+    decision2 = 'y'
     # decision1 = input("Scrapping nba players?")
     # decision2 = input("Scrapping tmdata and lgdata?")
 elif __name__ != '__main__':
