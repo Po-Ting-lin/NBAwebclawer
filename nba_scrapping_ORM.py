@@ -10,8 +10,8 @@ from nba_players_class import TEXT,LEAGUE,TEAM,SCRAPPING,POOL,TEAM_TABLE,LEAGUE_
 
 ###############################################################################
 if __name__ == '__main__':
-    decision1 = 'n'
-    decision2 = 'y'
+    decision1 = 'y'
+    decision2 = 'n'
     # decision1 = input("Scrapping nba players?")
     # decision2 = input("Scrapping tmdata and lgdata?")
 elif __name__ != '__main__':
@@ -29,6 +29,7 @@ if decision1 == 'y':
 # scrapping team data and league data
 if decision2 == 'y':
     session_scrape = scrape.scrape_team()
+    session_scrape = scrape.scrape_league()
 ###############################################################################
 
 # flushing(update database through conducting the change by SQL commands)

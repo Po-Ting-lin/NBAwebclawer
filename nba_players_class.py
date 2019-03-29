@@ -4,6 +4,7 @@ Created on Sat Jan 26 15:04:59 2019
 
 @author: BT
 """
+
 import sys
 import re
 import time
@@ -16,8 +17,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column,String,Float,Integer
-
-
 
 
 ###############################################################################
@@ -123,10 +122,10 @@ class Base_of(object):
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
 
         # connection in local mySQL
-        self.conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        # self.conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
 
         # connection by cloud SQL proxy
-        # conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
+        self.conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
 
         # set long timeout
         # conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
@@ -236,8 +235,10 @@ class SCRAPPING(Base_of):
         url_list = self.find_each_post()
 
         # update id find the max id in all POOL object
-        self.id_current = self.sess.query(POOL).order_by(POOL.id.desc()).first().id + 1
-
+        try:
+            self.id_current = self.sess.query(POOL).order_by(POOL.id.desc()).first().id + 1
+        except:
+            self.id_current = 1
         # find the information from each game
         for k in range(len(url_list)):
             name_list = []
@@ -489,12 +490,13 @@ class ANALYSIS(Base_of):
         self.namelist = []
         self.baseline = []
         self.compresstime_data = []
+
     def ana_best(self):
-        """Find the best data among all the players"""
+        """Find the best data today"""
 
         # best data
         print("best...")
-        a = self.sess.query(POOL).order_by(POOL.PTS.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.PTS.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').first():
             tem = BEST_TABLE(a.name, 'PTS', a.PTS)
             self.sess.add(tem)
@@ -502,7 +504,7 @@ class ANALYSIS(Base_of):
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PTS').update(
                 {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.PTS})
 
-        a = self.sess.query(POOL).order_by(POOL.AST.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.AST.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').first():
             tem = BEST_TABLE(a.name, 'AST', a.AST)
             self.sess.add(tem)
@@ -510,7 +512,7 @@ class ANALYSIS(Base_of):
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'AST').update(
                 {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.AST})
 
-        a = self.sess.query(POOL).order_by(POOL.BLK.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.BLK.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').first():
             tem = BEST_TABLE(a.name, 'BLK', a.BLK)
             self.sess.add(tem)
@@ -518,7 +520,7 @@ class ANALYSIS(Base_of):
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'BLK').update(
                 {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.BLK})
 
-        a = self.sess.query(POOL).order_by(POOL.TOV.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.TOV.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').first():
             tem = BEST_TABLE(a.name, 'TOV', a.TOV)
             self.sess.add(tem)
@@ -526,7 +528,7 @@ class ANALYSIS(Base_of):
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'TOV').update(
                 {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.TOV})
 
-        a = self.sess.query(POOL).order_by(POOL.EFF.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.EFF.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').first():
             tem = BEST_TABLE(a.name, 'EFF', a.EFF)
             self.sess.add(tem)
@@ -534,7 +536,7 @@ class ANALYSIS(Base_of):
             self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'EFF').update(
                 {BEST_TABLE.bestname: a.name, BEST_TABLE.data: a.EFF})
 
-        a = self.sess.query(POOL).order_by(POOL.PER.desc()).first()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).order_by(POOL.PER.desc()).first()
         if not self.sess.query(BEST_TABLE).filter(BEST_TABLE.best == 'PER').first():
             tem = BEST_TABLE(a.name, 'PER', a.PER)
             self.sess.add(tem)
@@ -546,7 +548,7 @@ class ANALYSIS(Base_of):
     def eff_calculation(self):
         """After scraping, this method can calculate EFF for each player."""
         # Choose those EFF is equal to zero, even if some of those were already calculated.
-        a = self.sess.query(POOL).filter(POOL.EFF == 0.0, POOL.year ).all()
+        a = self.sess.query(POOL).filter(POOL.EFF == 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
             # these data are float type~
             eff = player.PTS + +player.ORB + +player.DRB + +player.AST + player.STL + player.BLK - (player.FGA - player.FGM) - (player.FTA - player.FTM) - player.TOV
@@ -606,7 +608,7 @@ class ANALYSIS(Base_of):
 
         # import league data
         lg = self.sess.query(LEAGUE_TABLE).first()
-        for player in self.sess.query(POOL).filter(POOL.aPER == 0.0).all():
+        for player in self.sess.query(POOL).filter(POOL.aPER == 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all():
             # team object eg: t_obj.ast_per_g
             # player object eg: player.AST
             t_obj = self.sess.query(TEAM_TABLE).filter(TEAM_TABLE.teamsname == player.team).first()
@@ -662,7 +664,7 @@ class ANALYSIS(Base_of):
 
         ## calculate PER
         # only calculate Today PER
-        a = self.sess.query(POOL).filter(POOL.PER != 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
+        a = self.sess.query(POOL).filter(POOL.PER == 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
             if self.accumulated_aPER != 0:
                 PER = round(player.aPER*(15/self.accumulated_aPER), 2)
@@ -672,38 +674,49 @@ class ANALYSIS(Base_of):
             print(player.name,"'s PER is: ",PER)
         return self.sess
 
-    # def total_MP_map(self):
-    #     for i in range(10):
-    #         for player in self.sess.query(NBASTORAGE).all():
-    #             exec("self.total_MP_eachgame["+str(i)+"] += player.ontime"+str(i))
-    #     print('total_MP_eachgame0:', self.total_MP_eachgame[0], 'total_MP_eachgame1:', self.total_MP_eachgame[1])
-
-    def compresstime_of_each_player(self, time_length=-1):
-        """compress time axis"""
-        # name list TODO need to be optimize!!!!!
+    def find_name(self):
+        # name list
         a = self.sess.query(POOL).all()
         for row in a:
             if row.name not in self.namelist:
                 self.namelist.append(row.name)
-        # compress
+        return self.namelist
+
+    def compresstime_of_each_player(self, time_length=-1, name_list=[]):
+        """compress time axis"""
+
+        # name list
+        self.namelist = name_list
+
+        # initialize
         self.compresstime_data = [[0]*18]*len(self.namelist)
+
         # check current id
         try:
             self.id_current = self.sess.query(PLAYER_PERCENTAGE_TABLE).order_by(PLAYER_PERCENTAGE_TABLE.id.desc()).first().id + 1
         except:
             self.id_current = 1
+
+        # compress
         for i in range(len(self.namelist)):
             # calculate one player at a time
+
+            # determine how many data would like to be compress
             if time_length == -1:
                 a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).all()
             else:
                 a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).limit(time_length).all()
+
+            # buffer
             data_list = [0]*19
-            # Sum total time
+
             if self.sess.query(POOL).filter(POOL.name == self.namelist[i]):
+                # Sum total time
                 for different_time_player in a:
                     data_list[0] += different_time_player.ontime
-                print(self.namelist[i], data_list[0])
+                print('Compressing ', str(time_length), ' ', self.namelist[i], data_list[0])
+
+                # averaging
                 if data_list[0] != 0:
                     for different_time_player in a:
                         # Ratio
@@ -732,24 +745,24 @@ class ANALYSIS(Base_of):
                         query_find = self.sess.query(PLAYER_PERCENTAGE_TABLE).filter(PLAYER_PERCENTAGE_TABLE.name == self.namelist[i],
                                                                                      PLAYER_PERCENTAGE_TABLE.timelength == time_length)
                         if query_find.first():
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.PTS: round(data_list[1],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.ORB: round(data_list[2],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.DRB: round(data_list[3],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.AST: round(data_list[4],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.STL: round(data_list[5],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.BLK: round(data_list[6],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.FGA: round(data_list[7],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.FGM: round(data_list[8],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.FTA: round(data_list[9],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.FTM: round(data_list[10],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.TPA: round(data_list[11],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.TPM: round(data_list[12],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.TOV: round(data_list[13],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.PF: round(data_list[14],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.plusminus: round(data_list[15],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.aPER: round(data_list[16],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.PER: round(data_list[17],2)})
-                            query_find.update({PLAYER_PERCENTAGE_TABLE.EFF: round(data_list[18],2)})
+                            query_find.update({PLAYER_PERCENTAGE_TABLE.PTS: round(data_list[1],2),
+                                               PLAYER_PERCENTAGE_TABLE.ORB: round(data_list[2],2),
+                                               PLAYER_PERCENTAGE_TABLE.DRB: round(data_list[3],2),
+                                               PLAYER_PERCENTAGE_TABLE.AST: round(data_list[4],2),
+                                               PLAYER_PERCENTAGE_TABLE.STL: round(data_list[5],2),
+                                               PLAYER_PERCENTAGE_TABLE.BLK: round(data_list[6],2),
+                                               PLAYER_PERCENTAGE_TABLE.FGA: round(data_list[7],2),
+                                               PLAYER_PERCENTAGE_TABLE.FGM: round(data_list[8],2),
+                                               PLAYER_PERCENTAGE_TABLE.FTA: round(data_list[9],2),
+                                               PLAYER_PERCENTAGE_TABLE.FTM: round(data_list[10],2),
+                                               PLAYER_PERCENTAGE_TABLE.TPA: round(data_list[11],2),
+                                               PLAYER_PERCENTAGE_TABLE.TPM: round(data_list[12],2),
+                                               PLAYER_PERCENTAGE_TABLE.TOV: round(data_list[13],2),
+                                               PLAYER_PERCENTAGE_TABLE.PF: round(data_list[14],2),
+                                               PLAYER_PERCENTAGE_TABLE.plusminus: round(data_list[15],2),
+                                               PLAYER_PERCENTAGE_TABLE.aPER: round(data_list[16],2),
+                                               PLAYER_PERCENTAGE_TABLE.PER: round(data_list[17],2),
+                                               PLAYER_PERCENTAGE_TABLE.EFF: round(data_list[18],2)})
                         else:
                             tem = PLAYER_PERCENTAGE_TABLE(self.id_current, self.namelist[i], time_length, data_list[1],
                                                           data_list[4], data_list[5],
@@ -759,8 +772,69 @@ class ANALYSIS(Base_of):
                                                           data_list[16], data_list[17], data_list[18])
                             self.sess.add(tem)
                             self.id_current += 1
+
+                    # this player on-time == 0
+                    else:
+                        pass
+
         self.compresstime_data[i] = data_list[1:]
         return self.compresstime_data, self.sess
+    
+    def compress_all_player_all_time(self):
+        """compress time and players axis"""
+
+        # Use the data in PLAYER_PERCENTAGE_TABLE
+        a = self.sess.query(PLAYER_PERCENTAGE_TABLE).filter(PLAYER_PERCENTAGE_TABLE.timelength == -1).all()
+        data_list = [0] * 19
+        data_length = len(a)
+        for player in a:
+            data_list[1] += (player.PTS / data_length)
+            data_list[2] += (player.ORB / data_length)
+            data_list[3] += (player.DRB / data_length)
+            data_list[4] += (player.AST / data_length)
+            data_list[5] += (player.STL / data_length)
+            data_list[6] += (player.BLK / data_length)
+            data_list[7] += (player.FGA / data_length)
+            data_list[8] += (player.FGM / data_length)
+            data_list[9] += (player.FTA / data_length)
+            data_list[10] += (player.FTM / data_length)
+            data_list[11] += (player.TPA / data_length)
+            data_list[12] += (player.TPM / data_length)
+            data_list[13] += (player.TOV / data_length)
+            data_list[14] += (player.PF / data_length)
+            data_list[15] += (player.plusminus / data_length)
+            data_list[16] += (player.aPER / data_length)
+            data_list[17] += (player.PER / data_length)
+            data_list[18] += (player.EFF / data_length)
+        query_find = self.sess.query(PLAYER_PERCENTAGE_TABLE).filter(PLAYER_PERCENTAGE_TABLE.id == 9999)
+        if query_find.first():
+            query_find.update({PLAYER_PERCENTAGE_TABLE.PTS: round(data_list[1], 2),
+                               PLAYER_PERCENTAGE_TABLE.ORB: round(data_list[2], 2),
+                               PLAYER_PERCENTAGE_TABLE.DRB: round(data_list[3], 2),
+                               PLAYER_PERCENTAGE_TABLE.AST: round(data_list[4], 2),
+                               PLAYER_PERCENTAGE_TABLE.STL: round(data_list[5], 2),
+                               PLAYER_PERCENTAGE_TABLE.BLK: round(data_list[6], 2),
+                               PLAYER_PERCENTAGE_TABLE.FGA: round(data_list[7], 2),
+                               PLAYER_PERCENTAGE_TABLE.FGM: round(data_list[8], 2),
+                               PLAYER_PERCENTAGE_TABLE.FTA: round(data_list[9], 2),
+                               PLAYER_PERCENTAGE_TABLE.FTM: round(data_list[10], 2),
+                               PLAYER_PERCENTAGE_TABLE.TPA: round(data_list[11], 2),
+                               PLAYER_PERCENTAGE_TABLE.TPM: round(data_list[12], 2),
+                               PLAYER_PERCENTAGE_TABLE.TOV: round(data_list[13], 2),
+                               PLAYER_PERCENTAGE_TABLE.PF: round(data_list[14], 2),
+                               PLAYER_PERCENTAGE_TABLE.plusminus: round(data_list[15], 2),
+                               PLAYER_PERCENTAGE_TABLE.aPER: round(data_list[16], 2),
+                               PLAYER_PERCENTAGE_TABLE.PER: round(data_list[17], 2),
+                               PLAYER_PERCENTAGE_TABLE.EFF: round(data_list[18], 2)})
+        else:
+            tem = PLAYER_PERCENTAGE_TABLE(9999, 'all', data_length, data_list[1],
+                                          data_list[4], data_list[5],
+                                          data_list[6], data_list[7], data_list[8], data_list[9],
+                                          data_list[10], data_list[11], data_list[12], data_list[2],
+                                          data_list[3], data_list[13], data_list[14], data_list[15],
+                                          data_list[16], data_list[17], data_list[18])
+            self.sess.add(tem)
+        return self.sess
 ###############################################################################
 
 
@@ -769,6 +843,7 @@ conn, session = Base_of().call_session()
 Base = declarative_base()
 
 ###############################################################################
+
 
 class LEAGUE_TABLE(Base):
     __tablename__ = 'league_data'
