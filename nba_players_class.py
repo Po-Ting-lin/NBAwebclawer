@@ -1,6 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jan 26 15:04:59 2019
+Created on Sat Jan 26 15:04:59 2018
+
+## Content
+
+    # Function:
+        1. find number
+
+    # Class:
+        1. TEXT
+        2. LEAGUE
+        3. TEAM
+        4. Base_of (father of SCRAPPING and ANALYSIS)
+        5. SCRAPPING
+        6. ANALYSIS
+
+    # Table for Object Relational Mapper (ORM)
+        1. LEAGUE_TABLE
+        2. PLAYER_PERCENTAGE_TABLE
+        3. TEAM_TABLE
+        4. BEST_TABLE
+        5. DATE_TABLE
+        6. POOL
 
 @author: BT
 """
@@ -38,9 +59,10 @@ def find_number(i, target_text, number_list, ontime_bool=False):
         number_list = list(map(float, number_list))
     return number_list
         
-        
+
+###############################################################################
 class TEXT(object):
-    def __init__(self,url):
+    def __init__(self, url):
         self.url = url
 
     def get_page_text(self):
@@ -135,6 +157,7 @@ class Base_of(object):
         Session = sessionmaker(bind=self.conn, autoflush=False)
         self.sess = Session()
         return self.conn,self.sess
+
 
 # a child of Base_of
 class SCRAPPING(Base_of):
@@ -320,11 +343,19 @@ class SCRAPPING(Base_of):
                 else:
                     name_list.append('N/A')
 
+
+
                 # find data(15)
                 # find ontime
-                ontime_list = find_number(i, 'statTotal.secs">.\w*:.\w*</td>', ontime_list, ontime_bool=True)
+                try:
+                    ontime_list = find_number(i, 'statTotal.secs">.\w*:.\w*</td>', ontime_list, ontime_bool=True)
+                except:
+                    break
                 # find plusminus
-                pm_list = find_number(i, '"showPlusMinus">.\w*</td>', pm_list)
+                try:
+                    pm_list = find_number(i, '"showPlusMinus">.\w*</td>', pm_list)
+                except:
+                    break
                 # find score
                 score_list = find_number(i, 'statTotal.points">.\w*</td>', score_list)
                 # find off_rebounds
@@ -654,7 +685,7 @@ class ANALYSIS(Base_of):
         return self.sess
 
     def per_calculation(self):
-        ## calculate lg_aPER(sigma(MPi*aPERi/Min))
+        # calculate lg_aPER(sigma(MPi*aPERi/Min))
         # accumulate player's aPER which is not equal to zero.
         buffer = []
         a = self.sess.query(POOL).all()
@@ -836,7 +867,7 @@ class ANALYSIS(Base_of):
             self.sess.add(tem)
         return self.sess
 ###############################################################################
-
+# database connection
 
 conn, session = Base_of().call_session()
 # database obj
