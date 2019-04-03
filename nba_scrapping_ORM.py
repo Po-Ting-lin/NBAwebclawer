@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb  5 16:44:22 2018
+Created on Tue Feb  6 16:44:22 2018
 Purpose: Scrape player's data from each game, Scrape league average data
 Package: SQLalchemy (MYSQL dialect), BeautifulSoup, Selenium
 
