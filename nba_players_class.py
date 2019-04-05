@@ -142,12 +142,17 @@ class Base_of(object):
     def call_session(self,call_who='localhost'):
         # read nba player's data, team data, and league data
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
-
+        try:
+            with open('/home/bt/PycharmProjects/NBA_webclawer/code.txt', 'r') as f:
+                cloud_SQL_proxy = f.readline().strip("\n")
+                local_mySQL = f.readline().strip("\n")
+        except FileNotFoundError:
+            print("Cannot open txt of code!")
         # connection in local mySQL
-        # self.conn = create_engine('mysql+pymysql://root:root@localhost/nba_db',poolclass=NullPool)
+        # self.conn = create_engine(local_mySQL,poolclass=NullPool)
 
         # connection by cloud SQL proxy
-        self.conn = create_engine('mysql+pymysql://root:root@127.0.0.1:3309/nba_cloud', poolclass=NullPool)
+        self.conn = create_engine(cloud_SQL_proxy, poolclass=NullPool)
 
         # set long timeout
         # conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')

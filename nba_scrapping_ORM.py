@@ -10,13 +10,11 @@ Package: SQLalchemy (MYSQL dialect), BeautifulSoup, Selenium
 from nba_players_class import SCRAPPING
 
 ###############################################################################
+decision1, decision2 = 'n', 'n'
 if __name__ == '__main__':
     decision1 = 'y'
     decision2 = 'n'
 
-elif __name__ != '__main__':
-    decision1 = 'n'
-    decision2 = 'n'    
 ###############################################################################
 # create scrapping object
 scrape = SCRAPPING()
