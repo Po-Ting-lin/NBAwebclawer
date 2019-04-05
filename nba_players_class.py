@@ -133,13 +133,14 @@ class TEAM(object):  # require class TEXT
                 continue
         return team_data, opp_data
 
+
 # father
 class Base_of(object):
     def __init__(self):
         self.sess = None
         self.conn = None
         
-    def call_session(self,call_who='localhost'):
+    def call_session(self,call_who='Proxy'):
         # read nba player's data, team data, and league data
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
         try:
@@ -148,11 +149,16 @@ class Base_of(object):
                 local_mySQL = f.readline().strip("\n")
         except FileNotFoundError:
             print("Cannot open txt of code!")
-        # connection in local mySQL
-        # self.conn = create_engine(local_mySQL,poolclass=NullPool)
 
-        # connection by cloud SQL proxy
-        self.conn = create_engine(cloud_SQL_proxy, poolclass=NullPool)
+        # choose one option to connect
+        if call_who == 'local':
+            # connection in local mySQL
+            self.conn = create_engine(local_mySQL,poolclass=NullPool)
+        elif call_who == 'Proxy':
+            # connection by cloud SQL proxy
+            self.conn = create_engine(cloud_SQL_proxy, poolclass=NullPool)
+        else:
+            self.conn = None
 
         # set long timeout
         # conn.execute('SET GLOBAL innodb_lock_wait_timeout = 10000;')
