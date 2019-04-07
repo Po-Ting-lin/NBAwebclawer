@@ -697,7 +697,7 @@ class ANALYSIS(Base_of):
 
     def lg_aPER_compute(self):
         """
-        total MP --> for lg_aPER eg: {"Curry": 120.48, "Lebron": 130.22,...,"all": 1244.23}
+        player MP and total MP --> for lg_aPER eg: {"Curry": 120.48, "Lebron": 130.22,...,"all": 1244.23}
         player_aPER --> for lg_aPER
         """
         if self.namelist:
@@ -726,14 +726,14 @@ class ANALYSIS(Base_of):
     def per_calculation(self):
         ## calculate PER
         # only calculate Today PER
-        a = self.sess.query(POOL).all()
+        a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
             if self.lg_aPER != 0:
                 PER = round(player.aPER*(15/self.lg_aPER), 2)
             elif self.lg_aPER == 0:
                 PER = 0
-            self.sess.query(POOL).filter(POOL.name == player.name).update({POOL.PER: float(PER)})
-            print(player.name,"'s PER is: ",PER)
+            self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.PER: float(PER)})
+            print(player.name, "'s PER is: ", PER)
         return self.sess
 
     def find_name(self):
@@ -749,6 +749,7 @@ class ANALYSIS(Base_of):
 
         # name list
         self.namelist = name_list
+        count = len(name_list)
 
         # initialize
         self.compresstime_data = [[0]*18]*len(self.namelist)
@@ -774,16 +775,13 @@ class ANALYSIS(Base_of):
             data_list = [0]*19
 
             if self.sess.query(POOL).filter(POOL.name == self.namelist[i]):
-                # Sum total time
-                for different_time_player in a:
-                    data_list[0] += different_time_player.ontime
-                print('Compressing ', str(time_length), ' ', self.namelist[i], data_list[0])
+                print('Compressing ', str(time_length), ' ', self.namelist[i], self.total_MP[self.namelist[i]], count)
 
                 # averaging
-                if data_list[0] != 0:
+                if self.total_MP[self.namelist[i]] != 0:
                     for different_time_player in a:
                         # Ratio
-                        ratio = (different_time_player.ontime / data_list[0])
+                        ratio = (different_time_player.ontime / self.total_MP[self.namelist[i]])
                         # Average these data by multiplying the ratio for each game
                         data_list[1] += different_time_player.PTS * ratio
                         data_list[2] += different_time_player.ORB * ratio
@@ -839,6 +837,7 @@ class ANALYSIS(Base_of):
                 # this player on-time == 0
                 else:
                     pass
+            count -= 1
 
         self.compresstime_data[i] = data_list[1:]
         return self.compresstime_data, self.sess

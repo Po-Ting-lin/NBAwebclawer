@@ -34,6 +34,7 @@ session_ana = ana_obj.league_parameter_calculation()
 session_ana = ana_obj.team_parameter_calculation()
 session_ana = ana_obj.a_per_calculation()
 session_ana.commit()
+ana_obj.lg_aPER_compute()
 session_ana = ana_obj.per_calculation()
 session_ana.commit()
 
