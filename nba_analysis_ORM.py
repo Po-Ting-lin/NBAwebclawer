@@ -26,15 +26,16 @@ session_ana = ana_obj.ana_best()
 # eff
 session_ana = ana_obj.eff_calculation()
 
+# find name of all players
+namelist = ana_obj.find_name()
+
 # PER calculation
 session_ana = ana_obj.league_parameter_calculation()
 session_ana = ana_obj.team_parameter_calculation()
 session_ana = ana_obj.a_per_calculation()
+session_ana.commit()
 session_ana = ana_obj.per_calculation()
-
-
-# find name of all players
-namelist = ana_obj.find_name()
+session_ana.commit()
 
 # compress 1 game
 test_space, session_ana = ana_obj.compresstime_of_each_player(1, namelist)

@@ -39,7 +39,6 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column,String,Float,Integer
 
-
 ###############################################################################
 
 def find_number(i, target_text, number_list, ontime_bool=False):
@@ -522,8 +521,9 @@ class SCRAPPING(Base_of):
 class ANALYSIS(Base_of):
     def __init__(self, year, month, day):
         super().__init__()
-        self.total_MP_eachgame = [0]*10
-        self.accumulated_aPER = 0
+        self.total_MP = dict()
+        self.lg_aPER = 0
+        self.player_aPER = dict()
         self.year = year
         self.month = month
         self.day = day
@@ -695,24 +695,44 @@ class ANALYSIS(Base_of):
 
         return self.sess
 
-    def per_calculation(self):
-        # calculate lg_aPER(sigma(MPi*aPERi/Min))
-        # accumulate player's aPER which is not equal to zero.
-        buffer = []
-        a = self.sess.query(POOL).all()
-        for player in a:
-            buffer.append(player.aPER != 0.0)
-        self.accumulated_aPER = np.mean(buffer)
+    def lg_aPER_compute(self):
+        """
+        total MP --> for lg_aPER eg: {"Curry": 120.48, "Lebron": 130.22,...,"all": 1244.23}
+        player_aPER --> for lg_aPER
+        """
+        if self.namelist:
+            buf_total = 0
+            for name in self.namelist:
+                buf = 0
+                buf_aPER = []
+                games = self.sess.query(POOL).filter(POOL.name == name).all()
+                print(name, len(games))
+                for player in games:
+                    buf += player.ontime
+                    buf_aPER.append(player.aPER)
+                buf_total += buf
+                self.total_MP.update({name: buf})
+                self.player_aPER.update({name: np.mean(buf_aPER)})
+            self.total_MP.update({"all": buf_total})
+        else:
+            print("namelist == NONE!")
+            sys.exit()
 
+        # calculate lg_aPER(sigma(MPi*aPERi/Min))
+        for name in self.namelist:
+            self.lg_aPER += self.player_aPER[name] * (self.total_MP[name]/self.total_MP["all"])
+        print("lg aPER:", self.lg_aPER)
+
+    def per_calculation(self):
         ## calculate PER
         # only calculate Today PER
-        a = self.sess.query(POOL).filter(POOL.PER == 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
+        a = self.sess.query(POOL).all()
         for player in a:
-            if self.accumulated_aPER != 0:
-                PER = round(player.aPER*(15/self.accumulated_aPER), 2)
-            elif self.accumulated_aPER == 0:
+            if self.lg_aPER != 0:
+                PER = round(player.aPER*(15/self.lg_aPER), 2)
+            elif self.lg_aPER == 0:
                 PER = 0
-            self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.PER: float(PER)})
+            self.sess.query(POOL).filter(POOL.name == player.name).update({POOL.PER: float(PER)})
             print(player.name,"'s PER is: ",PER)
         return self.sess
 
@@ -743,7 +763,8 @@ class ANALYSIS(Base_of):
         for i in range(len(self.namelist)):
             # calculate one player at a time
 
-            # determine how many data would like to be compress
+
+            # determine how many data (a) would like to be compressed
             if time_length == -1:
                 a = self.sess.query(POOL).filter(POOL.name == self.namelist[i]).all()
             else:
@@ -815,9 +836,9 @@ class ANALYSIS(Base_of):
                             self.sess.add(tem)
                             self.id_current += 1
 
-                    # this player on-time == 0
-                    else:
-                        pass
+                # this player on-time == 0
+                else:
+                    pass
 
         self.compresstime_data[i] = data_list[1:]
         return self.compresstime_data, self.sess
