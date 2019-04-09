@@ -34,8 +34,8 @@ session_ana = ana_obj.league_parameter_calculation()
 session_ana = ana_obj.team_parameter_calculation()
 session_ana = ana_obj.a_per_calculation()
 session_ana.commit()
-ana_obj.lg_aPER_compute()
-session_ana = ana_obj.per_calculation()
+lg_aper = ana_obj.lg_aPER_compute(namelist)
+session_ana = ana_obj.per_calculation(lg_aper)
 session_ana.commit()
 
 # compress 1 game

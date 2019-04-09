@@ -695,14 +695,14 @@ class ANALYSIS(Base_of):
 
         return self.sess
 
-    def lg_aPER_compute(self):
+    def lg_aPER_compute(self, namelist):
         """
         player MP and total MP --> for lg_aPER eg: {"Curry": 120.48, "Lebron": 130.22,...,"all": 1244.23}
         player_aPER --> for lg_aPER
         """
-        if self.namelist:
+        if namelist:
             buf_total = 0
-            for name in self.namelist:
+            for name in namelist:
                 buf = 0
                 buf_aPER = []
                 games = self.sess.query(POOL).filter(POOL.name == name).all()
@@ -719,18 +719,19 @@ class ANALYSIS(Base_of):
             sys.exit()
 
         # calculate lg_aPER(sigma(MPi*aPERi/Min))
-        for name in self.namelist:
+        for name in namelist:
             self.lg_aPER += self.player_aPER[name] * (self.total_MP[name]/self.total_MP["all"])
         print("lg aPER:", self.lg_aPER)
+        return self.lg_aPER
 
-    def per_calculation(self):
+    def per_calculation(self,lg_aper):
         ## calculate PER
         # only calculate Today PER
         a = self.sess.query(POOL).filter(POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
-            if self.lg_aPER != 0:
-                PER = round(player.aPER*(15/self.lg_aPER), 2)
-            elif self.lg_aPER == 0:
+            if lg_aper != 0:
+                PER = round(player.aPER*(15/lg_aper), 2)
+            elif lg_aper == 0:
                 PER = 0
             self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.PER: float(PER)})
             print(player.name, "'s PER is: ", PER)
