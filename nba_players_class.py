@@ -25,7 +25,7 @@ Created on Sat Jan 26 15:04:59 2018
 
 @author: BT
 """
-
+import os
 import sys
 import re
 import time
@@ -142,17 +142,15 @@ class Base_of(object):
     def call_session(self,call_who='Proxy'):
         # read nba player's data, team data, and league data
         # engine = create_engine('mysql+pymysql://<USER>:<PASSWORD>@127.0.0.1/<DATABASE>')
-        try:
-            with open('/home/bt/PycharmProjects/NBA_webclawer/code.txt', 'r') as f:
-                cloud_SQL_proxy = f.readline().strip("\n")
-                local_mySQL = f.readline().strip("\n")
-        except FileNotFoundError:
-            print("Cannot open txt of code!")
+
+        # read password from .bashrc
+        local_mySQL = os.getenv("local_conn")
+        cloud_SQL_proxy = os.getenv("proxy_conn")
 
         # choose one option to connect
         if call_who == 'local':
             # connection in local mySQL
-            self.conn = create_engine(local_mySQL,poolclass=NullPool)
+            self.conn = create_engine(local_mySQL, poolclass=NullPool)
         elif call_who == 'Proxy':
             # connection by cloud SQL proxy
             self.conn = create_engine(cloud_SQL_proxy, poolclass=NullPool)
@@ -166,7 +164,7 @@ class Base_of(object):
         # session:(connection object that communicating ORM with SQL)
         Session = sessionmaker(bind=self.conn, autoflush=False)
         self.sess = Session()
-        return self.conn,self.sess
+        return self.conn, self.sess
 
 
 # a child of Base_of
@@ -402,7 +400,7 @@ class SCRAPPING(Base_of):
                     fga_list) + len(tpm_list) + len(tpa_list) + len(ftm_list) + len(fta_list) + len(
                     turnovers_list)) / 15:
                 print('This URL ', url_list[k])
-                sys.exit("len of lists not match!")
+                # sys.exit("len of lists not match!")
             # update data
             zip_injection = zip(name_list, pm_list, ontime_list, score_list, off_rebounds_list, def_rebounds_list,
                                 assists_list, steals_list, blocks_list, fgm_list, fga_list, tpm_list, tpa_list,

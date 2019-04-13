@@ -22,8 +22,10 @@ scrape = SCRAPPING()
 conn, session_scrape = scrape.call_session()
 
 if decision1 == 'y':
-    session_scrape = scrape.scrape_player()
-
+    try:
+        session_scrape = scrape.scrape_player()
+    except AttributeError:
+        session_scrape = scrape.scrape_player()
 # scrapping team data and league data
 if decision2 == 'y':
     session_scrape = scrape.scrape_team()
