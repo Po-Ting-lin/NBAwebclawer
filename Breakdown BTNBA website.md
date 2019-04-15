@@ -32,7 +32,7 @@ https://nba.udn.com/nba/index
         return text
 ```
 再利用BeautifulSoup分解html找到目標tag，並把各個球員的數據抓下來存至資料庫內。
-```typescript
+```typescript=
     def call_soup(self,main_text):
         """main_text is for the main page"""
         self.soup = BeautifulSoup(main_text, 'html.parser')
