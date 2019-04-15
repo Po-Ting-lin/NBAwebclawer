@@ -63,33 +63,33 @@ https://nba.udn.com/nba/index
 
 以下為其中一個ORM的形式寫成的資料表。
 ```typescript
-class POOL(Base):
-    __tablename__ = 'Nba_players_data'
-    id = Column('ID', Integer, primary_key=True)
-    name = Column('name', String(40), index=True)
-    team = Column('team', String(5), index=True)
-    year = Column('Year', Integer)
-    month = Column('Month', Integer)
-    day = Column('Day', Integer)
-    # float column (19 columns)
-    col_list = ['ontime', 'PTS', 'ORB', 'DRB', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'TOV',
-                'PF', 'plusminus', 'aPER', 'PER', 'EFF']
-    for col in col_list:
-        exec(col + "= Column('" + col + "',Float)")
+    class POOL(Base):
+        __tablename__ = 'Nba_players_data'
+        id = Column('ID', Integer, primary_key=True)
+        name = Column('name', String(40), index=True)
+        team = Column('team', String(5), index=True)
+        year = Column('Year', Integer)
+        month = Column('Month', Integer)
+        day = Column('Day', Integer)
+        # float column (19 columns)
+        col_list = ['ontime', 'PTS', 'ORB', 'DRB', 'AST', 'STL', 'BLK', 'FGA', 'FGM', 'FTA', 'FTM', 'TPA', 'TPM', 'TOV',
+                    'PF', 'plusminus', 'aPER', 'PER', 'EFF']
+        for col in col_list:
+            exec(col + "= Column('" + col + "',Float)")
 
-    def __init__(self, id, name, team, year, month, day, ontime, PTS, ORB, DRB, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA,
-                 TPM, TOV, PF, plusminus):
-        self.id = id
-        self.name = name
-        self.team = team
-        self.year = year
-        self.month = month
-        self.day = day
-        for col in self.col_list[:16]:
-            exec("self." + col + "=" + col)
-        self.aPER = 0.0
-        self.PER = 0.0
-        self.EFF = 0.0
+        def __init__(self, id, name, team, year, month, day, ontime, PTS, ORB, DRB, AST, STL, BLK, FGA, FGM, FTA, FTM, TPA,
+                     TPM, TOV, PF, plusminus):
+            self.id = id
+            self.name = name
+            self.team = team
+            self.year = year
+            self.month = month
+            self.day = day
+            for col in self.col_list[:16]:
+                exec("self." + col + "=" + col)
+            self.aPER = 0.0
+            self.PER = 0.0
+            self.EFF = 0.0
 
 ```
 
