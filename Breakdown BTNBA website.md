@@ -1,5 +1,3 @@
-BTNBA ADDICTS
-
 # Breakdown BTNBA website
 
 ## Scrape
