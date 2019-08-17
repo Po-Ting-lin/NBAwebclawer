@@ -9,7 +9,7 @@ https://nba.udn.com/nba/index
 圖一：聯合新聞網公告的比賽數據
 
 利用Selenium來開啟自動控制瀏覽器。
-```typescript
+```python
     def get_page_text(self):
         """A way to get url html text"""
         # set web surfer close
@@ -30,7 +30,7 @@ https://nba.udn.com/nba/index
         return text
 ```
 再利用BeautifulSoup分解html找到目標tag，並把各個球員的數據抓下來存至資料庫內。
-```typescript
+```python
     def call_soup(self,main_text):
         """main_text is for the main page"""
         self.soup = BeautifulSoup(main_text, 'html.parser')
@@ -60,7 +60,7 @@ https://nba.udn.com/nba/index
 資料庫建構及操作形式為Object Relational Mapper（ORM），將資料表對應到python物件上，這麼做可以簡化複雜的資料庫操作問題。
 
 以下為其中一個ORM的形式寫成的資料表。
-```typescript
+```python
     class POOL(Base):
         __tablename__ = 'Nba_players_data'
         id = Column('ID', Integer, primary_key=True)
@@ -98,7 +98,7 @@ https://nba.udn.com/nba/index
 - Efficiency(EFF)
 Efficiency的計算為：
 PTS + ORB + DRB + +AST + STL + BLK - (FGA - FGM) - (FTA - FTM) - TOV
-```typescript
+```python
     def eff_calculation(self):
         """After scraping, this method can calculate EFF for each player."""
         # Choose those EFF is equal to zero, even if some of those were already calculated.
@@ -121,7 +121,7 @@ John Hollinger提出Player efficiency rating，以較嚴僅的方式來評估每
 
 3. aPER calculation: 計算校正每一個隊伍的Pace後的uPER。
 
-```typescript
+```python
     def a_per_calculation(self):
         """After scraping, this method can calculate adjested PER in the latest game for each player."""
 
@@ -176,7 +176,7 @@ John Hollinger提出Player efficiency rating，以較嚴僅的方式來評估每
 4. lg aPER compute: 將全部球員計算出來的aPER以上場時間去平均之，最後得出League aPER。
 
 5. PER calculation: 以League aPER去scaling每個球員的aPER，最後才計算出PER。
-```typescript
+```python
     def per_calculation(self,lg_aper):
         ## calculate PER
         # only calculate Today PER
