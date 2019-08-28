@@ -591,7 +591,7 @@ class ANALYSIS(Base_of):
         a = self.sess.query(POOL).filter(POOL.EFF == 0.0, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).all()
         for player in a:
             # these data are float type~
-            eff = player.PTS + +player.ORB + +player.DRB + +player.AST + player.STL + player.BLK - (player.FGA - player.FGM) - (player.FTA - player.FTM) - player.TOV
+            eff = player.PTS + player.ORB + player.DRB + player.AST + player.STL + player.BLK - (player.FGA - player.FGM) - (player.FTA - player.FTM) - player.TOV
             self.sess.query(POOL).filter(POOL.name == player.name, POOL.year == self.year, POOL.month == self.month, POOL.day == self.day).update({POOL.EFF: eff})
             print(player.name, 'finish EFF calculation:', player.EFF)
         return self.sess

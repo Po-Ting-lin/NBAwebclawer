@@ -1,0 +1,11 @@
+# [START runtime]
+runtime: python
+env: flex
+entrypoint: gunicorn -b :$PORT db_connection.wsgi
+
+beta_settings:
+    cloud_sql_instances: brian-db-233409:us-central1:brian-new-sql
+
+runtime_config:
+  python_version: 3
+# [END runtime]

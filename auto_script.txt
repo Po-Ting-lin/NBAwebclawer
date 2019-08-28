@@ -1,0 +1,5 @@
+cd ~
+./cloud_sql_proxy -instances=brian-db-233409:us-central1:brian-new-sql=tcp:3309 -credential_file=/home/bt/文件/brian-key/brian-db-233409-f10c52ae2ae1.json
+cd /home/bt/PycharmProjects/NBA_webclawer/
+/usr/bin/python3.6 /home/bt/PycharmProjects/nba_scrapping_ORM.py
+/usr/bin/python3.6 /home/bt/PycharmProjects/nba_analysis_ORM.py

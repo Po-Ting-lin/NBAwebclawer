@@ -1,0 +1,11 @@
+<diV align="center" class="pagination">
+    {% if items.has_previous %}
+    <a href="?page={{ items.previous_page_number }}">pref</a>
+    {% endif %}
+    <span class="current">
+        {{ items.number }} / {{ items.paginator.num_pages }}
+    </span>
+    {% if items.has_next %}
+    <a href="?page={{ items.next_page_number }}">next</a>
+    {% endif %}
+</diV>
