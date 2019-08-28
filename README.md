@@ -1,9 +1,8 @@
 # Preview
-
+https://htmlpreview.github.io/?https://github.com/Po-Ting-lin/NBAwebclawer/blob/master/LocalTEST.html
 
 
 # Breakdown BTNBA website
-
 ## Scrape
 ---
 - ### 從聯合新聞網抓取比賽的球員數據 
