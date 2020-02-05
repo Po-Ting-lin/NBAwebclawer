@@ -196,16 +196,16 @@ John Hollinger提出Player efficiency rating，以較嚴僅的方式來評估每
 - 不同球員之間分析
 - 同一球員不同歷史分析
 
-## Update Automatically
----
-- 排程
-linux系統之中，crontab服務可以設計欲執行時間和欲執行的命令。
-所以本計畫設計為每天下午兩點開始爬蟲及分析，爬蟲和分析好的資料更新資料庫。
-## Web
----
-- 網站架設
-Django為相似於MVC的MTV架構作為網站框架，model部份負責連結資料庫; template部份為html的網站呈現; view定義函式，提供網站與使用者互動及操作資料庫的功能。
+- ### Webclawer
+To prevent anti-scraping methods, we can visit a website with Web Browser. It can reach the inforamtion of html as well as JS.
+Pharse the html and JS of website and find the player's data by beautifulsoup4. Thus, we can get the data right after the end of game by automatically scraping.
 
-- 網站部屬
-架設網站在google cloud platform的app engine服務上。本地不用以任何硬體作為伺服器，同時google cloud platform的監控功能也可以估計計算量及記憶體容量，所以可以當作非常實用的後台監控功能。
+- ### Database 
+Connect MySQL with the medium called SQLalchemy which can communicate to database through python-like commands. Google cloud platform provides cloud SQL service, which can transfer our database onto cloud server so that the limitation of maintaining our local server has been overcome. To well fit the frame of Django, I use Object Relational Mapper（ORM）to create and collabrate with "Model" framework of Django.
+
+- ### Scheduler
+In order to daily update data, crontab can schedule routine command to run the pipeline of my webclawer scripts.
+
+- ### Website framework
+Django is similar to MVC framework; however, it can be divided into three part, including model, template and view. They are responsible for database connection, static file, and the definition of methods, respectively. Django are high-level Python Web framework without needing to reinvent the wheel.
 
